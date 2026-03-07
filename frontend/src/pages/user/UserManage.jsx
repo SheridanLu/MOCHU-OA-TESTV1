@@ -27,10 +27,8 @@ import {
 } from '@ant-design/icons';
 import './UserManage.css';
 
-const { Option } = Select;
-
 // API 基础地址
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 获取请求头
 function getAuthHeaders() {
@@ -59,8 +57,10 @@ function UserManage() {
   // 弹窗状态
   const [detailVisible, setDetailVisible] = useState(false);
   const [editVisible, setEditVisible] = useState(false);
+  const [addVisible, setAddVisible] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [editForm] = Form.useForm();
+  const [addForm] = Form.useForm();
 
   // 加载部门列表（用于筛选）
   const loadDepartments = useCallback(async () => {
@@ -96,8 +96,10 @@ function UserManage() {
       const result = await response.json();
 
       if (result.success) {
-        setUsers(result.data.list || []);
-        setTotal(result.data.total || 0);
+        // 后端返回的 data 可能是数组或 {list, total} 格式
+        const userData = Array.isArray(result.data) ? result.data : (result.data.list || []);
+        setUsers(userData);
+        setTotal(result.data.total || userData.length);
       } else {
         message.error(result.message || '加载用户列表失败');
       }
@@ -154,6 +156,36 @@ function UserManage() {
     } catch (error) {
       console.error('获取用户详情失败:', error);
       message.error('获取用户详情失败');
+    }
+  };
+
+  // 打开新增用户弹窗
+  const handleAddUser = () => {
+    addForm.resetFields();
+    setAddVisible(true);
+  };
+
+  // 提交新增用户
+  const handleAddSubmit = async () => {
+    try {
+      const values = await addForm.validateFields();
+      const response = await fetch(`${API_BASE}/users`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(values)
+      });
+      const result = await response.json();
+      if (result.success) {
+        message.success('用户创建成功');
+        setAddVisible(false);
+        addForm.resetFields();
+        loadUsers();
+      } else {
+        message.error(result.message || '创建用户失败');
+      }
+    } catch (error) {
+      console.error('创建用户失败:', error);
+      message.error('创建用户失败');
     }
   };
 
@@ -368,7 +400,10 @@ function UserManage() {
             </Col>
             <Col xs={24} sm={24} md={24} lg={9}>
               <Space wrap>
-                <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch}>
+                <Button type="primary" icon={<UserAddOutlined />} onClick={handleAddUser}>
+                  新增用户
+                </Button>
+                <Button icon={<SearchOutlined />} onClick={handleSearch}>
                   搜索
                 </Button>
                 <Button icon={<ReloadOutlined />} onClick={handleReset}>
@@ -451,6 +486,101 @@ function UserManage() {
           layout="vertical"
           name="editUserForm"
         >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="real_name"
+                label="姓名"
+                rules={[{ required: true, message: '请输入姓名' }]}
+              >
+                <Input placeholder="请输入姓名" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="手机号"
+                rules={[
+                  { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号' }
+                ]}
+              >
+                <Input placeholder="请输入手机号" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="email"
+                label="邮箱"
+                rules={[
+                  { type: 'email', message: '请输入正确的邮箱地址' }
+                ]}
+              >
+                <Input placeholder="请输入邮箱" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="department_id" label="所属部门">
+                <Select placeholder="请选择部门" allowClear>
+                  {departments.map(dept => (
+                    <Option key={dept.id} value={dept.id}>{dept.name}</Option>
+                  ))}
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="position" label="职位">
+                <Input placeholder="请输入职位" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
+      </Modal>
+
+      {/* 新增用户弹窗 */}
+      <Modal
+        title="新增用户"
+        open={addVisible}
+        onOk={handleAddSubmit}
+        onCancel={() => setAddVisible(false)}
+        okText="创建"
+        cancelText="取消"
+        width={600}
+      >
+        <Form
+          form={addForm}
+          layout="vertical"
+          name="addUserForm"
+        >
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="username"
+                label="用户名"
+                rules={[
+                  { required: true, message: '请输入用户名' },
+                  { pattern: /^[a-zA-Z0-9_]{3,20}$/, message: '用户名为3-20位字母、数字或下划线' }
+                ]}
+              >
+                <Input placeholder="请输入用户名" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="password"
+                label="初始密码"
+                rules={[
+                  { required: true, message: '请输入初始密码' },
+                  { min: 6, message: '密码至少6位' }
+                ]}
+              >
+                <Input.Password placeholder="请输入初始密码" />
+              </Form.Item>
+            </Col>
+          </Row>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item

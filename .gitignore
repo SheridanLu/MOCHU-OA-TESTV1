@@ -3,12 +3,13 @@ node_modules/
 backend/node_modules/
 frontend/node_modules/
 
-# Build outputs (keep dist for deployment)
-# frontend/dist/
+# Build outputs
+frontend/dist/
 
-# Database (keep for testing)
-# backend/database.db
-# backend/database.db-journal
+# Database
+backend/database.db
+backend/database.db-journal
+database.db
 
 # Uploads
 backend/uploads/

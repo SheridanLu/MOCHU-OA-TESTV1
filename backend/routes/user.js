@@ -579,4 +579,54 @@ router.get('/check-username', (req, res) => {
   }
 });
 
+/**
+ * PUT /api/users/:id/status
+ * 切换用户状态（启用/禁用）
+ */
+router.put('/:id/status', (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    // 验证状态值
+    if (!status || !['active', 'inactive', 'disabled'].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: '状态值无效'
+      });
+    }
+
+    // 检查用户是否存在
+    const user = db.prepare('SELECT * FROM users WHERE id = ? AND status != ?').get(id, 'deleted');
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: '用户不存在'
+      });
+    }
+
+    // 不允许禁用自己
+    // if (req.user && req.user.id === parseInt(id)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: '不能禁用自己的账号'
+    //   });
+    // }
+
+    // 更新状态
+    db.prepare('UPDATE users SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run(status, id);
+
+    res.json({
+      success: true,
+      message: status === 'active' ? '用户已启用' : '用户已禁用'
+    });
+  } catch (error) {
+    console.error('更新用户状态失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '更新用户状态失败'
+    });
+  }
+});
+
 module.exports = router;
