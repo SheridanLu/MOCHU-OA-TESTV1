@@ -1,0 +1,663 @@
+/**
+ * 超量采购变更申请样式
+ * Task 50: 变更管理 - 超量采购申请
+ */
+
+.overage-change-page {
+  padding: 24px;
+  background: #f5f7fa;
+  min-height: 100vh;
+}
+
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 统计卡片 */
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stat-card.warning {
+  border-left: 4px solid #faad14;
+}
+
+.stat-card.success {
+  border-left: 4px solid #52c41a;
+}
+
+.stat-card.error {
+  border-left: 4px solid #ff4d4f;
+}
+
+.stat-card.info {
+  border-left: 4px solid #1890ff;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin-bottom: 4px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* 列表样式 */
+.overage-list {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.filters select,
+.filters input {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+.filters input {
+  width: 220px;
+}
+
+.filters button {
+  padding: 8px 16px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.filters button:hover {
+  background: #e5e7eb;
+}
+
+/* 数据表格 */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.data-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.data-table td {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.data-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.empty-row {
+  text-align: center;
+  color: #9ca3af;
+  padding: 40px;
+}
+
+.link-text {
+  color: #1890ff;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.link-text:hover {
+  text-decoration: underline;
+}
+
+/* 标签样式 */
+.overage-type-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.status-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.amount-cell {
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+/* 操作按钮 */
+.action-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-link {
+  background: none;
+  border: none;
+  color: #1890ff;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+}
+
+.btn-link.danger {
+  color: #ff4d4f;
+}
+
+/* 分页 */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.pagination button {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  padding: 10px 20px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #40a9ff;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  padding: 10px 20px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+}
+
+.btn-danger {
+  padding: 10px 20px;
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-danger:hover {
+  background: #ff7875;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 12px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.create-modal {
+  width: 600px;
+}
+
+.detail-modal {
+  width: 700px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #9ca3af;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #6b7280;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+
+/* 表单样式 */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.required {
+  color: #ff4d4f;
+}
+
+.form-group select,
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.form-group select:focus,
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-tip {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #f0f9ff;
+  border-radius: 4px;
+  border-left: 3px solid #1890ff;
+}
+
+/* 详情样式 */
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.detail-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.detail-item .label {
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #6b7280;
+  min-width: 80px;
+}
+
+.detail-item .value {
+  font-size: 14px;
+  color: #1a1a2e;
+}
+
+.detail-item .value.amount {
+  font-weight: 600;
+  color: #1890ff;
+}
+
+/* 审批时间线 */
+.approval-timeline {
+  padding-left: 8px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-left: 24px;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  top: 20px;
+  bottom: 0;
+  width: 2px;
+  background: #e5e7eb;
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #d1d5db;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 2px #e5e7eb;
+}
+
+.timeline-item.approve .timeline-dot {
+  background: #52c41a;
+  box-shadow: 0 0 0 2px #b7eb8f;
+}
+
+.timeline-item.reject .timeline-dot {
+  background: #ff4d4f;
+  box-shadow: 0 0 0 2px #ffa39e;
+}
+
+.timeline-content {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 12px 16px;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.step-name {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.action-tag {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.action-tag.pending {
+  background: #fffbe6;
+  color: #d48806;
+}
+
+.action-tag.approve {
+  background: #f6ffed;
+  color: #389e0d;
+}
+
+.action-tag.reject {
+  background: #fff2f0;
+  color: #cf1322;
+}
+
+.timeline-user {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.timeline-comment {
+  font-size: 13px;
+  color: #4b5563;
+  margin-top: 4px;
+  padding: 8px;
+  background: #fff;
+  border-radius: 4px;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
+/* 拒绝区域 */
+.reject-section {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.reject-section h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.reject-section textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: vertical;
+}
+
+.reject-section textarea:focus {
+  outline: none;
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 3px rgba(255, 77, 79, 0.1);
+}
+
+/* 加载状态 */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .overage-change-page {
+    padding: 16px;
+  }
+
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .list-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .filters {
+    flex-wrap: wrap;
+  }
+
+  .filters select,
+  .filters input {
+    min-width: 100%;
+  }
+
+  .data-table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .create-modal,
+  .detail-modal {
+    width: 95%;
+    margin: 20px;
+  }
+}

@@ -1,0 +1,127 @@
+.user-manage-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: 100vh;
+}
+
+.user-manage-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.user-manage-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 8px 8px 0 0;
+}
+
+.user-manage-card .ant-card-head-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.filter-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 6px;
+  border: 1px solid #f0f0f0;
+}
+
+.filter-section .ant-input,
+.filter-section .ant-select-selector {
+  border-radius: 4px;
+}
+
+.filter-section .ant-input-affix-wrapper:hover,
+.filter-section .ant-input-affix-wrapper:focus,
+.filter-section .ant-select:hover .ant-select-selector,
+.filter-section .ant-select-focused .ant-select-selector {
+  border-color: #1890ff;
+}
+
+/* 表格样式优化 */
+.user-manage-card .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-manage-card .ant-table-tbody > tr:hover > td {
+  background: #e6f7ff;
+}
+
+.user-manage-card .ant-table-tbody > tr > td {
+  padding: 12px 16px;
+}
+
+/* 操作按钮样式 */
+.user-manage-card .ant-table-cell .ant-btn-link {
+  padding: 0 4px;
+  height: auto;
+}
+
+.user-manage-card .ant-table-cell .ant-btn-link:hover {
+  background: transparent;
+}
+
+/* 状态标签样式 */
+.ant-tag-green {
+  background: #f6ffed;
+  border-color: #b7eb8f;
+  color: #52c41a;
+}
+
+.ant-tag-red {
+  background: #fff2f0;
+  border-color: #ffccc7;
+  color: #ff4d4f;
+}
+
+/* 弹窗样式 */
+.ant-modal-header {
+  border-bottom: 1px solid #f0f0f0;
+  background: #fafafa;
+  border-radius: 8px 8px 0 0;
+}
+
+.ant-modal-title {
+  font-weight: 600;
+}
+
+.ant-modal-content {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.ant-modal-footer {
+  border-top: 1px solid #f0f0f0;
+  padding: 12px 16px;
+}
+
+/* 表单样式 */
+.ant-form-item-label > label {
+  color: #333;
+  font-weight: 500;
+}
+
+.ant-descriptions-bordered .ant-descriptions-item-label {
+  background: #fafafa;
+  font-weight: 500;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .user-manage-container {
+    padding: 16px;
+  }
+
+  .filter-section {
+    padding: 12px;
+  }
+
+  .filter-section .ant-col {
+    margin-bottom: 8px;
+  }
+}

@@ -1,0 +1,140 @@
+/* 角色管理页面样式 */
+.role-manage-container {
+  padding: 24px;
+  background: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.role-manage-card {
+  border-radius: 8px;
+}
+
+.role-manage-card .ant-card-head {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.role-manage-card .ant-card-head-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+/* 筛选区域 */
+.filter-section {
+  margin-bottom: 16px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+/* 权限详情列表 */
+.permission-detail-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.permission-module {
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fafafa;
+  border-radius: 4px;
+}
+
+.permission-module .module-title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1890ff;
+}
+
+.permission-module .module-perms {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* 权限设置列表 */
+.permission-setting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.permission-module-card {
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  background: #fff;
+}
+
+.permission-module-card .module-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.permission-module-card .module-header strong {
+  color: #333;
+}
+
+.permission-module-card .perm-count {
+  font-size: 12px;
+  color: #999;
+}
+
+.permission-checkbox-group {
+  width: 100%;
+}
+
+.permission-checkbox-group .ant-checkbox-wrapper {
+  margin-bottom: 8px;
+}
+
+/* 表格样式优化 */
+.role-manage-card .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.role-manage-card .ant-table-tbody > tr:hover > td {
+  background: #e6f7ff;
+}
+
+/* 核心角色标识 */
+.ant-badge-status-processing {
+  animation: antBadgeProcessingAnimation 1.2s infinite ease-in-out;
+}
+
+@keyframes antBadgeProcessingAnimation {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+/* 弹窗样式 */
+.ant-modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+  .role-manage-container {
+    padding: 12px;
+  }
+
+  .filter-section {
+    padding: 12px;
+  }
+
+  .permission-module-card .permission-checkbox-group .ant-col {
+    span: 24;
+  }
+}

@@ -1,0 +1,421 @@
+/**
+ * 批量采购管理页面样式
+ */
+
+.batch-purchase-page {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: 100vh;
+}
+
+.batch-purchase-page .page-header {
+  margin-bottom: 24px;
+}
+
+.batch-purchase-page .page-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f1f1f;
+}
+
+.batch-purchase-page .page-header p {
+  margin: 0;
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+/* 列表样式 */
+.batch-purchase-list {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  gap: 12px;
+}
+
+.filters select,
+.filters input {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.filters input {
+  width: 200px;
+}
+
+.filters button {
+  padding: 8px 16px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.filters button:hover {
+  background: #40a9ff;
+}
+
+/* 按钮样式 */
+.btn-primary {
+  padding: 8px 16px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #40a9ff;
+}
+
+.btn-primary:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.btn-danger {
+  color: #ff4d4f !important;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-link {
+  color: #1890ff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* 数据表格 */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.data-table th {
+  background: #fafafa;
+  font-weight: 600;
+  color: #595959;
+}
+
+.data-table tr:hover {
+  background: #fafafa;
+}
+
+.data-table .empty-row {
+  text-align: center;
+  color: #8c8c8c;
+  padding: 40px;
+}
+
+.data-table .actions {
+  display: flex;
+  gap: 8px;
+}
+
+.data-table .actions button {
+  padding: 4px 8px;
+  font-size: 12px;
+  background: transparent;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #595959;
+}
+
+.data-table .actions button:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.data-table .actions .btn-danger:hover {
+  color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+/* 状态标签 */
+.status-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #fff;
+}
+
+/* 分页 */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.pagination button {
+  padding: 6px 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.pagination button:disabled {
+  color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.pagination span {
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+/* 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  max-width: 90%;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.close-btn {
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #8c8c8c;
+  line-height: 1;
+}
+
+.close-btn:hover {
+  color: #1f1f1f;
+}
+
+.modal-body {
+  padding: 24px;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.modal-footer button {
+  padding: 8px 24px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.modal-footer button:first-child {
+  background: #fff;
+  border: 1px solid #d9d9d9;
+}
+
+/* 表单样式 */
+.batch-purchase-form {
+  width: 900px;
+}
+
+.form-section {
+  margin-bottom: 20px;
+}
+
+.form-section label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-section .required {
+  color: #ff4d4f;
+}
+
+.form-section select,
+.form-section textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-section textarea {
+  resize: vertical;
+}
+
+.contract-info {
+  background: #f5f5f5;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+}
+
+.contract-info p {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+}
+
+.contract-info p:last-child {
+  margin: 0;
+}
+
+.purchase-lists-section {
+  margin-bottom: 20px;
+}
+
+.purchase-lists-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+}
+
+.purchase-list-card {
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.purchase-list-card .list-title {
+  padding: 12px 16px;
+  background: #fafafa;
+  border-bottom: 1px solid #e8e8e8;
+  font-weight: 500;
+}
+
+.items-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.items-table th,
+.items-table td {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.items-table th {
+  background: #fafafa;
+  font-weight: 500;
+  font-size: 13px;
+  color: #595959;
+}
+
+.items-table tr.selected {
+  background: #e6f7ff;
+}
+
+.items-table input[type="number"] {
+  width: 80px;
+  padding: 4px 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+}
+
+.items-table input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.items-table tfoot td {
+  font-weight: 500;
+  background: #fafafa;
+}
+
+.selected-items-section {
+  margin-bottom: 20px;
+  border: 1px solid #1890ff;
+  border-radius: 4px;
+  padding: 16px;
+  background: #e6f7ff;
+}
+
+.selected-items-section h4 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  color: #1890ff;
+}
+
+/* 详情样式 */
+.batch-purchase-detail {
+  width: 800px;
+}
+
+.info-section {
+  margin-bottom: 24px;
+}
+
+.info-row {
+  display: flex;
+  margin-bottom: 12px;
+}
+
+.info-row .label {
+  width: 100px;
+  color: #8c8c8c;
+  flex-shrink: 0;
+}
+
+.info-row .value {
+  color: #1f1f1f;
+}
+
+/* 加载状态 */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #8c8c8c;
+}

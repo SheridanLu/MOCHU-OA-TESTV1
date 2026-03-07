@@ -1,0 +1,3426 @@
+OA-MOCHU 开发进度日志
+========================
+创建时间: 2026-03-07
+基于: OA_FINAL 技术需求规格说明书
+总任务数: 60
+
+进度:
+[x] Task 1: 初始化项目结构
+[x] Task 2: 登录模块 - 第一阶段登录页
+[x] Task 3: 登录模块 - 第二阶段认证
+[x] Task 4: JWT认证中间件
+[x] Task 5: 登录失败锁定机制
+[x] Task 6: 验证码60秒限制
+[x] Task 7: 首页布局
+[x] Task 8: 组织架构 - 部门树结构
+[x] Task 9: 组织架构 - 部门CRUD
+[x] Task 10: 7个核心部门初始化
+[x] Task 11: 用户管理 - 用户列表
+[x] Task 12: 用户管理 - 用户CRUD
+[x] Task 13: 用户管理 - HR联动
+[x] Task 14: 企业邮箱自动创建
+[x] Task 15: 企业邮箱禁用
+[x] Task 16: 通讯录模块
+[x] Task 17: RBAC - 角色管理
+[x] Task 18: RBAC - 权限分配
+[x] Task 19: RBAC - 权限校验中间件
+[x] Task 20: 项目立项 - 实体项目编号
+[x] Task 21: 项目立项 - 虚拟项目编号
+[x] Task 22: 项目立项 - 审批流程
+[x] Task 23: 虚拟项目转实体
+[x] Task 24: 虚拟项目中止
+[x] Task 25: 收入合同 - 编号规则
+[x] Task 26: 收入合同 - 审批流程
+[x] Task 27: 支出合同 - 编号规则
+[x] Task 28: 支出合同 - 超量校验
+[x] Task 29: 支出合同 - 超量审批流程
+[x] Task 30: 支出合同超量校验 - 预算员审批 ⭐ NEW
+[x] Task 31: 价格预警机制
+[x] Task 32: 零星采购管理 ⭐ NEW
+[x] Task 33: 零星采购预警 ⭐ NEW
+[x] Task 34: 超量采购申请 ⭐ NEW
+[x] Task 35: 批量采购
+[x] Task 36: 零星采购 ⭐ NEW
+[x] Task 37: 零星采购预警 ⭐ NEW
+[x] Task 38: 物资入库 - 入库单生成
+[x] Task 39: 物资入库 - 库存更新
+[x] Task 40: 物资出库 - 领用申请
+[x] Task 41: 物资出库 - 出库单生成
+[x] Task 42: 物资出库 - 库存扣减
+[x] Task 43: 物资退库
+[x] Task 44: 库存查询
+[x] Task 45: 收入对账单 - 自动生成 ⭐ NEW
+[x] Task 46: 收入对账单 - 产值确认
+[x] Task 47: 人工费付款 ⭐ NEW
+[x] Task 48: 材料款付款
+[x] Task 49: 成本汇总报表
+[x] Task 50: 变更管理 - 超量采购申请
+[x] Task 51: 变更管理 - 新增设备材料
+[x] Task 52: 变更管理 - 现场签证
+[x] Task 53: 变更管理 - 甲方需求变更
+[x] Task 54: 施工管理 - 里程碑设置
+[x] Task 55: 施工管理 - 进度填报
+[x] Task 56: 施工管理 - 偏差预警
+[x] Task 57: 竣工管理 - 劳务结算
+[x] Task 58: 竣工管理 - 竣工图纸
+[x] Task 59: 竣工管理 - 文档归档
+[x] Task 60: 系统管理 - 日志审计
+
+========================
+
+## Task 30 实现详情 (2026-03-07)
+
+### 功能概述
+实现支出合同超量校验功能：检查采购需求超出项目采购清单时，需预算员审批。
+
+### 数据库扩展
+
+#### contracts 表新增字段：
+- `overcheck_reason` - 超量说明
+- `overcheck_result` - 超量校验结果（JSON）
+- `is_excessive` - 是否超出合同总价
+- `price_percentage` - 价格偏差百分比
+- `overcheck_status` - 超量校验状态: none/pending/approved/rejected
+- `budget_approver_id` - 预算员审批人ID
+- `budget_approved_at` - 预算员审批时间
+- `budget_approve_comment` - 预算员审批意见
+
+#### 新建 approval_records 表：
+- `id` - 主键
+- `contract_id` - 合同ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+### 后端 API
+- `POST /api/contracts/:id/overcheck` - 提交超量校验申请
+- `POST /api/contracts/:id/overcheck/approve` - 预算员审批通过
+- `POST /api/contracts/:id/overcheck/reject` - 预算员审批拒绝
+- `GET /api/contracts/overcheck/pending` - 获取待超量校验列表
+- `GET /api/contracts/:id/overcheck` - 获取超量校验详情
+- `GET /api/contracts/:id/overcheck/validate` - 验证是否需要超量校验
+- `GET /api/contracts/:id/records` - 获取合同完整审批记录
+
+### 前端组件
+- `ContractList.jsx` - 更新，增加超量校验按钮和状态显示
+- `OvercheckApproval.jsx` - 新增，超量校验审批列表页面
+- `OvercheckModal.jsx` - 新增，超量校验申请弹窗
+
+### 审批流程
+1. 采购员创建支出合同
+2. 如果超出项目采购清单/预算，需提交超量校验申请
+3. 预算员（BUDGET角色）审批超量校验
+4. 超量校验通过后，进入正常审批流程（财务 -> 法务 -> 总经理）
+
+### 角色权限
+- BUDGET 角色已包含 `contract:approve` 权限，可审批超量校验
+- GM 角色也可审批超量校验
+
+========================
+
+========================
+
+## Task 32 实现详情 (2026-03-07)
+
+### 功能概述
+实现零星采购预警：超批量采购总额1.5%预警，支持价格预警和超量审批流程。
+
+### 编号规则
+- 零星采购编号: LX + YYMM + 3位序号
+- 序号每月重置
+- 例: 2025年3月第1批: LX250301
+
+### 数据库扩展
+
+#### 新建 zero_purchases 表（零星采购主表）：
+- `id` - 主键
+- `purchase_no` - 采购编号（唯一）
+- `name` - 采购名称
+- `supplier_id` - 供应商ID
+- `total_amount` - 总金额
+- `status` - 状态: draft/pending/approved/rejected/completed/cancelled
+- `warning_level` - 预警级别: none/warning/danger/excessive
+- `price_warning_count` - 价格预警数量
+- `is_excessive` - 是否超1.5%限额
+- `is_legal_review` - 是否需要法务审核
+- `remarks` - 备注
+- `creator_id` - 创建人ID
+
+#### 新建 zero_purchase_items 表（采购清单明细）：
+- `id` - 主键
+- `purchase_id` - 采购ID
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 数量
+- `unit_price` - 单价
+- `base_price` - 基准价
+- `total_price` - 总价
+- `has_warning` - 是否有价格预警
+- `warning_level` - 预警级别
+- `remarks` - 备注
+
+#### 新建 zero_purchase_approvals 表（审批记录）：
+- `id` - 主键
+- `purchase_id` - 采购ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+
+#### 新建 zero_purchase_monthly_stats 表（月度统计）：
+- `id` - 主键
+- `year_month` - 年月
+- `batch_total_amount` - 批量采购总额
+- `zero_purchase_total` - 零星采购总额
+- `limit_amount` - 1.5%限额
+- `used_percentage` - 已使用百分比
+- `is_excessive` - 是否超限
+
+### 后端 API
+- `GET /api/zero-purchases` - 获取零星采购列表（含月度统计）
+- `GET /api/zero-purchases/:id` - 获取零星采购详情
+- `GET /api/zero-purchases/:id/items` - 获取采购清单明细
+- `POST /api/zero-purchases` - 创建零星采购
+- `PUT /api/zero-purchases/:id` - 更新零星采购
+- `DELETE /api/zero-purchases/:id` - 删除零星采购
+- `POST /api/zero-purchases/batch-delete` - 批量删除
+- `POST /api/zero-purchases/check-excessive` - 检查是否超1.5%限额
+- `POST /api/zero-purchases/:id/submit` - 提交审批
+- `POST /api/zero-purchases/:id/approve` - 审批通过
+- `POST /api/zero-purchases/:id/reject` - 审批拒绝
+- `GET /api/zero-purchases/monthly-stats` - 获取月度统计
+
+### 前端组件
+- `frontend/src/pages/material/ZeroPurchase.jsx` - 零星采购管理页面
+
+### 功能特性
+1. **零星采购列表**
+   - 显示采购编号、名称、供应商、总金额、清单数量
+   - 显示价格预警状态和预警级别
+   - 支持搜索、筛选（状态、预警级别）
+   - 支持批量删除
+
+2. **月度统计卡片**
+   - 本月零星采购总额
+   - 批量采购基准总额
+   - 占比（1.5%限额）
+   - 预警状态
+
+3. **创建/编辑零星采购**
+   - 填写基本信息（名称、供应商、备注）
+   - 添加采购清单明细
+   - 自动检查价格预警（超出基准价）
+   - 自动检查超1.5%限额
+
+4. **价格预警**
+   - 单价超出基准价时显示预警
+   - 超出10%为warning级别
+   - 超出20%为danger级别
+
+5. **超量预警**
+   - 累计零星采购超过批量采购总额1.5%时预警
+   - 超量需法务审核
+
+6. **审批流程**
+   - 正常：财务 → 总经理
+   - 价格预警：财务 → 法务 → 总经理
+   - 超量（超1.5%）：预算员 → 财务 → 法务 → 总经理
+
+### 页面路由
+- `/material/zero-purchase` - 零星采购管理页面
+
+========================
+
+## Task 35 实现详情 (2026-03-07)
+
+### 功能概述
+实现批量采购功能：依据合同的批量采购流程
+
+### 数据库扩展
+
+#### 新建 batch_purchases 表（批量采购主表）：
+- `id` - 主键
+- `batch_no` - 批量采购编号（唯一）
+- `contract_id` - 关联支出合同ID（必填）
+- `project_id` - 关联项目ID
+- `status` - 状态: draft/pending/approved/rejected/completed/cancelled
+- `total_amount` - 总金额
+- `current_approver` - 当前审批人角色
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 batch_purchase_items 表（采购明细）：
+- `id` - 主键
+- `batch_purchase_id` - 批量采购ID
+- `purchase_list_item_id` - 关联采购清单项ID
+- `material_name` - 材料名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 数量
+- `unit_price` - 单价
+- `total_price` - 小计
+- `remark` - 备注
+
+#### 新建 batch_purchase_approvals 表（审批记录）：
+- `id` - 主键
+- `batch_purchase_id` - 批量采购ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+
+### 后端 API
+- `GET /api/purchase/batch` - 获取批量采购列表
+- `POST /api/purchase/batch` - 创建批量采购
+- `GET /api/purchase/batch/:id` - 获取批量采购详情
+- `PUT /api/purchase/batch/:id` - 更新批量采购
+- `DELETE /api/purchase/batch/:id` - 删除批量采购
+- `POST /api/purchase/batch/:id/submit` - 提交审批
+- `POST /api/purchase/batch/:id/approve` - 审批通过
+- `POST /api/purchase/batch/:id/reject` - 审批拒绝
+- `GET /api/purchase/batch/contracts/expense` - 获取可选支出合同
+- `GET /api/purchase/batch/contracts/:contractId/purchase-list` - 获取合同采购清单
+
+### 前端组件
+- `frontend/src/pages/purchase/BatchPurchase.jsx` - 批量采购管理页面
+- `frontend/src/pages/purchase/BatchPurchase.css` - 样式文件
+
+### 功能特性
+1. **批量采购列表**
+   - 显示采购编号、关联合同、关联项目、供应商
+   - 显示总金额、状态、创建时间
+   - 支持搜索（编号/合同名称）和状态筛选
+   - 支持分页
+
+2. **新建批量采购**
+   - 必须关联已审批的支出合同
+   - 自动获取合同关联项目的采购清单
+   - 可选择采购清单中的物资
+   - 可修改采购数量和单价
+   - 自动计算总金额
+
+3. **批量采购详情**
+   - 显示基本信息和采购明细
+   - 显示审批流程记录
+
+4. **审批流程**
+   - 财务 → 总经理
+   - 支持审批通过/拒绝
+
+### 编号规则
+- 批量采购编号: BP + YYMM + 3位序号
+- 例: 2026年3月第1批: BP2603001
+
+### 业务规则
+- 批量采购必须关联已审批的支出合同
+- 采购清单来源于合同关联的项目
+- 只有草稿状态可以修改/删除
+- 提交后进入审批流程
+
+### 页面路由
+- `/purchase/batch` - 批量采购管理页面
+
+========================
+
+## Task 36 实现详情 (2026-03-07)
+
+### 功能概述
+实现零星采购功能：非合同采购流程，无需关联合同，直接录入物资清单
+
+### 数据库扩展
+
+#### 新建 sporadic_purchases 表（零星采购主表）：
+- `id` - 主键
+- `sporadic_no` - 零星采购编号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `reason` - 采购原因（必填）
+- `status` - 状态: draft/pending/approved/rejected/cancelled
+- `total_amount` - 总金额
+- `approval_step` - 当前审批步骤
+- `current_approver` - 当前审批人角色
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 sporadic_purchase_items 表（物资明细）：
+- `id` - 主键
+- `sporadic_id` - 零星采购ID
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 数量
+- `unit_price` - 单价
+- `total_price` - 总价
+- `remark` - 备注
+- `sort_order` - 排序号
+
+#### 新建 sporadic_purchase_approvals 表（审批记录）：
+- `id` - 主键
+- `sporadic_id` - 零星采购ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+
+### 后端 API
+- `GET /api/purchase/sporadic` - 获取零星采购列表
+- `POST /api/purchase/sporadic` - 创建零星采购
+- `GET /api/purchase/sporadic/:id` - 获取零星采购详情
+- `PUT /api/purchase/sporadic/:id` - 更新零星采购
+- `DELETE /api/purchase/sporadic/:id` - 删除零星采购
+- `POST /api/purchase/sporadic/:id/submit` - 提交审批
+- `POST /api/purchase/sporadic/:id/approve` - 审批通过
+- `POST /api/purchase/sporadic/:id/reject` - 审批拒绝
+- `GET /api/purchase/sporadic/check-limit` - 检查限额
+
+### 前端组件
+- `frontend/src/pages/purchase/SporadicPurchase.jsx` - 零星采购管理页面
+
+### 功能特性
+1. **零星采购列表**
+   - 显示采购编号、项目名称、采购原因、物资数量、总金额
+   - 显示审批状态和当前审批人
+   - 支持搜索、筛选（项目、状态）
+
+2. **新建零星采购**
+   - 选择关联项目（必填）
+   - 填写采购原因（必填）
+   - 直接录入物资清单（材料名称、规格、单位、数量、单价）
+   - 自动计算总金额
+
+3. **限额监控**
+   - 检查零星采购是否超出批量采购的1.5%限额
+   - 超限时显示预警提示
+   - 超限需额外预算员审批
+
+4. **审批流程**
+   - 正常流程：财务 → 总经理
+   - 超限流程：预算员 → 财务 → 总经理
+
+### 业务规则
+- 零星采购无需关联合同
+- 必须填写采购原因
+- 只有草稿状态可以编辑/删除
+- 提交后进入审批流程
+
+### 页面路由
+- `/purchase/sporadic` - 零星采购管理页面
+
+========================
+
+## Task 38-39 实现详情 (2026-03-07)
+
+### 功能概述
+实现物资入库与库存更新功能：入库单生成、入库确认、库存自动更新、入库日志记录。
+
+### 编号规则
+- 入库单编号: RK + YYMM + 3位序号
+- 例: 2026年3月第1个: RK2603001
+
+### 数据库扩展
+
+#### 新建 stock_in 表（入库单主表）：
+- `id` - 主键
+- `stock_in_no` - 入库单编号（唯一）
+- `project_id` - 关联项目ID
+- `batch_purchase_id` - 关联批量采购ID
+- `sporadic_purchase_id` - 关联零星采购ID
+- `supplier_id` - 供应商ID
+- `total_quantity` - 总数量
+- `total_amount` - 总金额
+- `status` - 状态: draft/confirmed/cancelled
+- `handler_id` - 经手人ID
+- `handler_name` - 经手人姓名
+- `in_date` - 入库日期
+- `remark` - 备注
+- `creator_id` - 创建人ID
+
+#### 新建 stock_in_items 表（入库明细）：
+- `id` - 主键
+- `stock_in_id` - 入库单ID
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 入库数量
+- `available_quantity` - 可领库存量
+- `unit_price` - 单价
+- `total_price` - 总价
+- `remark` - 备注
+
+#### 新建 stock 表（库存主表）：
+- `id` - 主键
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 库存数量
+- `available_quantity` - 可领库存量
+- `locked_quantity` - 锁定数量
+- `unit_price` - 单价
+- `max_quantity` - 库存上限
+- `min_quantity` - 库存下限
+- `warning_quantity` - 预警数量
+- `location` - 存放位置
+- `status` - 状态: normal/locked/disabled
+- `last_in_date` - 最后入库日期
+- `last_out_date` - 最后出库日期
+
+#### 新建 stock_logs 表（库存日志）：
+- `id` - 主键
+- `stock_id` - 库存ID
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `action` - 操作: in/out/adjust/return
+- `quantity` - 操作数量
+- `before_quantity` - 操作前数量
+- `after_quantity` - 操作后数量
+- `available_before` - 操作前可领量
+- `available_after` - 操作后可领量
+- `source_type` - 来源类型: stock_in/stock_out/manual
+- `source_id` - 来源ID
+- `source_no` - 来源单号
+- `operator_id` - 操作人ID
+- `operator_name` - 操作人姓名
+- `remark` - 备注
+
+### 后端 API
+
+#### 入库单管理：
+- `GET /api/stock/in` - 获取入库单列表
+- `GET /api/stock/in/:id` - 获取入库单详情
+- `POST /api/stock/in` - 创建入库单（草稿）
+- `PUT /api/stock/in/:id` - 更新入库单（仅草稿）
+- `DELETE /api/stock/in/:id` - 删除入库单（仅草稿）
+- `POST /api/stock/in/:id/cancel` - 取消入库单
+
+#### 库存更新（Task 39核心）：
+- `PUT /api/stock/in/:id/quantity` - 入库确认并更新库存
+
+#### 库存查询：
+- `GET /api/stock` - 获取库存列表
+- `GET /api/stock/:id` - 获取库存详情（含出入库记录）
+- `PUT /api/stock/:id` - 更新库存基本信息
+- `GET /api/stock/logs/list` - 获取库存日志
+- `GET /api/stock/warning/list` - 获取库存预警列表
+
+### 业务规则
+
+#### 入库库存更新（PUT /api/stock/in/:id/quantity）：
+1. 入库数量累加到现有库存
+2. 不能超过库存上限（max_quantity）
+3. 库存不能为负数
+4. 自动记录入库日志
+5. 只有草稿状态的入库单可以确认
+6. 确认后状态变更为 confirmed
+
+#### 库存预警：
+- 库存不足：quantity < min_quantity
+- 库存预警：quantity <= warning_quantity
+- 库存超限：quantity > max_quantity
+
+### 功能特性
+1. **入库单列表**
+   - 显示入库单号、项目、供应商、总数量、总金额、状态
+   - 支持搜索（编号/项目名称）和状态筛选
+   - 支持分页
+
+2. **创建入库单**
+   - 关联项目、批量采购或零星采购
+   - 录入物资明细（名称、规格、单位、数量、单价）
+   - 自动计算总数量和总金额
+   - 初始为草稿状态
+
+3. **入库确认**
+   - 确认后更新库存
+   - 检查库存上限
+   - 自动创建或更新库存记录
+   - 记录完整的入库日志
+
+4. **库存查询**
+   - 显示当前库存、可领量、锁定数量
+   - 显示库存预警状态
+   - 支持关键词搜索
+
+5. **库存日志**
+   - 记录所有出入库操作
+   - 可追溯来源单据
+   - 支持按物资、操作类型、日期筛选
+
+### 权限控制
+- `stock:create` - 创建入库单
+- `stock:edit` - 编辑入库单/库存信息
+- `stock:delete` - 删除入库单
+- `stock:in` - 入库确认
+- `stock:cancel` - 取消入库单
+
+========================
+
+## Task 37 实现详情 (2026-03-07)
+
+### 功能概述
+实现零星采购预警：超批量采购总额1.5%预警
+
+### 数据库扩展
+
+#### 新建 sporadic_warnings 表（零星采购预警表）：
+- `id` - 主键
+- `project_id` - 项目ID（必填）
+- `sporadic_id` - 关联零星采购ID（可选）
+- `batch_total` - 批量采购总额
+- `sporadic_total` - 零星采购总额
+- `percentage` - 占比百分比
+- `status` - 状态: active/handled/ignored
+- `message` - 预警消息
+- `handler_id` - 处理人ID
+- `handle_remark` - 处理备注
+- `handled_at` - 处理时间
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+### 后端服务
+
+#### sporadicWarningService 服务方法：
+- `checkSporadicLimit(projectId, amount)` - 检查零星采购限额
+- `createWarning(data)` - 创建预警记录
+- `getWarnings(options)` - 获取预警列表
+- `getWarningById(id)` - 获取预警详情
+- `handleWarning(id, handlerId, remark, status)` - 处理预警
+- `getProjectWarningStats(projectId)` - 获取项目预警统计
+- `checkAndCreateWarning(projectId, sporadicId, amount)` - 自动检查并创建预警
+- `batchCheckWarningStatus(projectIds)` - 批量检查预警状态
+
+### 后端 API
+
+- `GET /api/purchase/sporadic/warnings` - 获取预警列表
+- `GET /api/purchase/sporadic/warnings/:id` - 获取预警详情
+- `PUT /api/purchase/sporadic/warnings/:id/handle` - 处理预警
+- `GET /api/purchase/sporadic/warnings/stats/:projectId` - 获取项目预警统计
+- `GET /api/purchase/sporadic/warnings/check/:projectId` - 检查项目限额
+- `POST /api/purchase/sporadic/warnings/check-all` - 批量检查项目预警
+
+### 前端组件
+- `frontend/src/pages/purchase/SporadicPurchase.jsx` - 更新，增加预警功能
+
+### 功能特性
+
+#### 1. 限额计算
+- 计算公式：零星采购金额 / 批量采购总额 > 1.5%
+- 每个项目独立计算
+- 实时显示占比百分比
+
+#### 2. 新建零星采购时的预警
+- 实时检查限额
+- 显示批量采购总额、零星采购累计、当前占比
+- 使用进度条可视化展示
+- 超出限额时红色高亮显示
+- 弹出警告提示框
+
+#### 3. 预警管理
+- 预警列表页面（弹窗形式）
+- 显示项目、批量采购总额、零星采购总额、占比
+- 预警状态：待处理/已处理/已忽略
+- 支持预警处理操作
+
+#### 4. 超限处理
+- 超出1.5%时自动生成预警记录
+- 超限采购需预算员额外审批
+- 审批流程：预算员 → 财务 → 总经理
+
+### 业务规则
+- 每个项目独立计算限额
+- 批量采购总额 = 项目所有已审批批量采购订单金额之和
+- 零星采购总额 = 项目所有非取消/拒绝的零星采购金额之和
+- 超出1.5%时生成预警
+- 预警需要处理确认
+
+### 权限控制
+- 预警处理需要 `purchase:approve` 权限
+
+========================
+
+## Task 40 实现详情 (2026-03-07)
+
+### 功能概述
+实现项目领用物资申请功能：项目成员可申请领用库存物资，需审批后才能出库。
+
+### 编号规则
+- 领用申请编号: LY + YYMM + 3位序号
+- 例: 2026年3月第1个: LY2603001
+
+### 数据库扩展
+
+#### 新建 stock_out_applications 表（领用申请主表）：
+- `id` - 主键
+- `application_no` - 申请单号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `applicant_id` - 申请人ID（必填）
+- `reason` - 领用原因（必填）
+- `status` - 状态: pending/approved/rejected
+- `approver_id` - 审批人ID
+- `approve_comment` - 审批意见
+- `approved_at` - 审批通过时间
+- `reject_reason` - 拒绝原因
+- `rejected_at` - 拒绝时间
+- `remark` - 备注
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 stock_out_application_items 表（申请明细）：
+- `id` - 主键
+- `application_id` - 申请ID
+- `material_id` - 物资ID（关联inventory表）
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 申请数量
+- `available_quantity` - 申请时可领数量（快照）
+- `remark` - 备注
+- `created_at` - 创建时间
+
+### 后端 API
+
+#### 领用申请管理：
+- `POST /api/stock/out/apply` - 提交领用申请
+- `GET /api/stock/out/pending` - 获取待审批申请列表
+- `GET /api/stock/out/applications` - 获取所有申请列表
+- `GET /api/stock/out/applications/:id` - 获取申请详情
+- `DELETE /api/stock/out/applications/:id` - 撤销申请（仅申请人可操作）
+- `GET /api/stock/out/my-applications` - 获取当前用户的申请
+
+#### 审批操作：
+- `POST /api/stock/out/:id/approve` - 审批通过（自动扣减库存）
+- `POST /api/stock/out/:id/reject` - 审批拒绝
+
+#### 辅助接口：
+- `GET /api/stock/out/available-materials` - 获取可领用物资列表
+
+### 前端组件
+- `frontend/src/pages/stock/StockOutApply.jsx` - 领用申请管理页面
+- `frontend/src/pages/stock/StockOutApply.css` - 样式文件
+
+### 功能特性
+
+#### 1. 领用申请列表
+- 三个标签页：我的申请、待审批、全部申请
+- 显示申请单号、项目名称、申请人、物资数量、状态
+- 支持状态筛选和关键词搜索
+- 支持分页
+
+#### 2. 新建领用申请
+- 必须选择关联项目
+- 必须填写领用原因
+- 从库存中选择可领用物资
+- 显示物资的当前可领数量
+- 支持修改申请数量
+- 提交前检查库存是否充足
+
+#### 3. 申请详情
+- 显示申请基本信息
+- 显示物资明细列表
+- 显示审批状态和审批信息
+
+#### 4. 审批功能
+- 待审批列表（需要 stock:approve 权限）
+- 审批通过：自动扣减库存、记录出库日志
+- 审批拒绝：填写拒绝原因
+
+#### 5. 撤销功能
+- 申请人可撤销待审批状态的申请
+- 已审批的申请不可撤销
+
+### 业务规则
+- 领用必须关联项目
+- 提交时检查库存是否充足
+- 审批通过时再次检查库存（防止并发冲突）
+- 审批通过后自动扣减库存
+- 自动记录库存变动日志
+- 只有申请人可以撤销申请
+- 只有待审批状态可以撤销
+
+### 页面路由
+- `/stock/out/apply` - 物资领用申请页面
+
+### 权限控制
+- `stock:out` - 提交领用申请
+- `stock:approve` - 审批领用申请
+
+========================
+
+## Task 41 实现详情 (2026-03-07)
+
+### 功能概述
+实现出库单生成功能：出库单列表、新建出库单（关联领用申请）、出库物资明细、打印出库单。
+
+### 编号规则
+- 出库单编号: CK + YYMMDD + 3位序号
+- 例: 2026年3月7日第1个: CK250307001
+- 每日重置序号
+
+### 数据库扩展
+
+#### 新建 stock_out 表（出库单主表）：
+- `id` - 主键
+- `stock_out_no` - 出库单编号（唯一）
+- `project_id` - 关联项目ID
+- `application_id` - 关联领用申请ID
+- `total_quantity` - 总数量
+- `total_amount` - 总金额
+- `status` - 状态: draft/confirmed/cancelled
+- `operator_id` - 出库人ID
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 stock_out_items 表（出库明细）：
+- `id` - 主键
+- `stock_out_id` - 出库单ID
+- `material_id` - 关联库存ID
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 出库数量
+- `unit_price` - 单价
+- `amount` - 金额
+- `remark` - 备注
+- `sort_order` - 排序号
+
+### 后端 API
+
+#### 出库单管理：
+- `GET /api/stock/out` - 获取出库单列表
+- `GET /api/stock/out/:id` - 获取出库单详情（含明细）
+- `POST /api/stock/out` - 创建出库单
+- `PUT /api/stock/out/:id` - 更新出库单（仅草稿）
+- `DELETE /api/stock/out/:id` - 删除出库单（仅草稿）
+- `PUT /api/stock/out/:id/confirm` - 确认出库并扣减库存
+- `GET /api/stock/out/applications/approved` - 获取已审批的领用申请列表
+- `GET /api/stock/out/print/:id` - 获取出库单打印数据
+
+### 前端组件
+- `frontend/src/pages/stock/StockOut.jsx` - 出库单管理页面
+
+### 功能特性
+
+#### 1. 出库单列表
+- 显示出库单号、项目名称、领用申请、物资数量、总金额、状态
+- 支持搜索（出库单号/项目/申请单号）和状态筛选
+- 支持分页
+
+#### 2. 新建出库单
+- 必须选择已审批的领用申请
+- 自动填充领用申请中的物资明细
+- 需填写物资单价
+- 自动计算总金额
+- 创建前检查库存是否充足
+
+#### 3. 出库确认
+- 确认后扣减库存
+- 自动记录库存变动日志
+- 更新库存最后出库日期
+- 检查库存是否充足
+
+#### 4. 出库单打印
+- 显示出库单基本信息
+- 显示物资明细清单
+- 包含领用人签字栏和库管员签字栏
+
+### 业务规则
+- 出库单必须关联已审批的领用申请
+- 创建和确认前都会检查库存是否充足
+- 出库后自动扣减库存（quantity 和 available_quantity）
+- 只有草稿状态可以修改/删除
+- 每个领用申请只能创建一次出库单
+
+### 权限控制
+- `stock:create` - 创建出库单
+- `stock:edit` - 编辑出库单
+- `stock:delete` - 删除出库单
+- `stock:out` - 确认出库
+
+### 页面路由
+- `/stock/out` - 出库单管理页面
+
+========================
+
+## Task 42 实现详情 (2026-03-07)
+
+### 功能概述
+实现出库后库存自动扣减功能：出库确认、库存检查、库存扣减、出库日志记录、库存预警。
+
+### 核心功能
+
+#### 1. 库存服务 (backend/services/stockService.js)
+提供以下方法：
+- `checkStock(materialId, quantity)` - 检查库存是否充足
+- `checkStockByName(materialName, specification, quantity)` - 通过物资名称检查库存
+- `deductStock(materialId, quantity, options)` - 扣减库存
+- `batchDeductStock(items, options)` - 批量扣减库存
+- `recordLog(logData)` - 记录库存变动日志
+- `checkAndCreateWarning(inventoryId, currentQuantity, availableQuantity)` - 检查并生成库存预警
+- `getStockInfo(materialId)` - 获取物资库存信息
+- `getStockInfoByName(materialName, specification)` - 通过名称获取库存信息
+- `getWarningList()` - 获取库存预警列表
+- `lockStock(materialId, quantity)` - 锁定库存（预留）
+- `unlockStock(materialId, quantity)` - 解锁库存
+
+### 数据库扩展
+
+#### stock_out 表扩展字段：
+- `confirmed_at` - 确认时间
+- `confirmed_by` - 确认人ID
+
+### 后端 API
+
+#### 核心接口：
+- `PUT /api/stock/out/:id/confirm` - 确认出库并扣减库存
+
+#### 辅助接口：
+- `POST /api/stock/out/check` - 出库前预检查库存是否充足
+
+### 业务规则
+
+#### 出库确认流程 (PUT /api/stock/out/:id/confirm)：
+1. 检查出库单状态（必须为 draft）
+2. 获取出库明细列表
+3. 逐项检查库存是否充足
+4. 逐项扣减库存：
+   - 从 inventory 表扣减 quantity（总库存）
+   - 从 inventory 表扣减 available_quantity（可领量）
+   - 更新 last_out_date（最后出库日期）
+5. 记录库存变动日志（inventory_logs 表）
+6. 检查库存预警：
+   - 库存低于下限（min_quantity）→ 生成危险预警
+   - 库存低于预警值（warning_quantity）→ 生成警告预警
+7. 更新出库单状态为 confirmed
+8. 记录确认人（confirmed_by）和确认时间（confirmed_at）
+
+#### 库存检查规则：
+- 出库数量必须大于 0
+- 可领库存（available_quantity）必须 >= 出库数量
+- 出库后库存不能为负数
+
+#### 库存预警规则：
+- 库存不足：quantity < min_quantity
+- 库存预警：quantity <= warning_quantity
+
+### 返回数据
+确认出库成功后返回：
+- `stock_out` - 更新后的出库单信息（含确认人姓名）
+- `update_details` - 各物资的扣减明细：
+  - material_name - 物资名称
+  - specification - 规格型号
+  - success - 是否成功
+  - before_quantity - 出库前库存
+  - out_quantity - 出库数量
+  - after_quantity - 出库后库存
+  - before_available - 出库前可领量
+  - after_available - 出库后可领量
+  - message - 结果消息
+
+### 权限控制
+- `stock:out` - 确认出库（扣减库存）
+
+### 与 Task 41 的关系
+- Task 41 负责出库单的生成和管理
+- Task 42 负责出库确认时的库存扣减逻辑
+- 两个功能共用 `PUT /api/stock/out/:id/confirm` 接口
+
+========================
+
+## Task 43 实现详情 (2026-03-07)
+
+### 功能概述
+实现物资退库功能：已出库物资退回仓库，退库后库存自动增加。
+
+### 编号规则
+- 退库单编号: TK + YYMMDD + 3位序号
+- 例: 2026年3月7日第1个: TK250307001
+- 每日重置序号
+
+### 数据库扩展
+
+#### 新建 stock_return 表（退库单主表）：
+- `id` - 主键
+- `return_no` - 退库单编号（唯一）
+- `stock_out_id` - 关联出库单ID（必填）
+- `project_id` - 关联项目ID（必填）
+- `total_amount` - 总金额
+- `status` - 状态: draft/confirmed/cancelled
+- `remark` - 备注
+- `operator_id` - 操作人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+- `confirmed_at` - 确认时间
+- `confirmed_by` - 确认人ID
+
+#### 新建 stock_return_items 表（退库明细）：
+- `id` - 主键
+- `return_id` - 退库单ID
+- `material_name` - 物资名称
+- `specification` - 规格型号
+- `unit` - 单位
+- `quantity` - 退库数量
+- `unit_price` - 单价
+- `amount` - 金额
+- `reason` - 退库原因（必填）
+- `sort_order` - 排序号
+- `created_at` - 创建时间
+
+### 后端 API
+
+#### 退库单管理：
+- `GET /api/stock/return` - 获取退库单列表
+- `GET /api/stock/return/:id` - 获取退库单详情（含明细）
+- `POST /api/stock/return` - 创建退库单
+- `DELETE /api/stock/return/:id` - 删除退库单（仅草稿）
+- `PUT /api/stock/return/:id/confirm` - 确认退库并增加库存
+- `GET /api/stock/return/print/:id` - 获取退库单打印数据
+- `GET /api/stock/return/out-list` - 获取可退库的出库单列表
+
+### 前端组件
+- `frontend/src/pages/stock/StockReturn.jsx` - 退库单管理页面
+
+### 功能特性
+
+#### 1. 退库单列表
+- 显示退库单号、关联出库单、项目名称、物资数量、总金额、状态
+- 支持搜索（退库单号/项目/出库单号）和状态筛选
+- 支持分页
+
+#### 2. 新建退库单
+- 第一步：选择已确认的出库单
+- 第二步：填写退库明细
+  - 自动填充出库物资信息
+  - 可修改退库数量
+  - 退库原因必填
+- 自动计算总金额
+
+#### 3. 退库确认
+- 确认后增加库存
+  - inventory.quantity 增加
+  - inventory.available_quantity 增加
+- 记录库存变动日志（change_type = 'return'）
+- 更新退库单状态
+
+#### 4. 退库单打印
+- 显示退库单基本信息
+- 显示物资明细清单（含退库原因）
+- 包含退库人和库管员签字栏
+
+### 业务规则
+
+#### 创建退库单：
+- 必须关联已确认的出库单
+- 退库物资必须来自已出库的物资
+- 退库原因必填
+- 退库数量不能超过出库数量
+- 只有草稿状态可以删除
+
+#### 确认退库：
+- 只有草稿状态可以确认
+- 确认后库存自动增加
+- 记录退库日志
+- 如果库存中不存在该物资，自动创建新库存记录
+
+### 权限控制
+- `stock:create` - 创建退库单
+- `stock:delete` - 删除退库单
+- `stock:in` - 确认退库（增加库存）
+
+### 页面路由
+- `/stock/return` - 物资退库管理页面
+
+========================
+
+## Task 44 实现详情 (2026-03-07)
+
+### 功能概述
+实现实时库存数量查询功能：库存列表、库存详情、库存统计、库存预警、数据导出。
+
+### 库存状态
+- **正常**：库存充足（quantity > warning_quantity）
+- **预警**：库存低于预警值但高于最低值（warning_quantity >= quantity >= min_quantity）
+- **紧急**：库存低于最低值（quantity < min_quantity）
+- **超储**：库存超过最大值（quantity > max_quantity）
+
+### 后端 API
+
+#### 库存查询 API：
+- `GET /api/stock/query` - 综合库存查询
+  - 支持按物资名称、规格、仓库位置筛选
+  - 支持库存状态筛选（正常/预警/紧急/超储）
+  - 支持记录状态筛选（normal/locked/disabled）
+  - 支持分页和排序
+- `GET /api/stock/query/statistics` - 获取库存统计数据
+- `GET /api/stock/query/detail/:id` - 获取库存详情（含完整出入库记录）
+- `GET /api/stock/query/export` - 导出库存数据（CSV格式）
+- `GET /api/stock/query/locations` - 获取所有仓库位置列表
+
+### 后端服务 (backend/services/stockService.js)
+
+新增方法：
+- `getStockList(options)` - 获取库存列表（带筛选、分页、排序）
+- `getStockDetail(id)` - 获取库存详情
+- `getStockStatistics()` - 获取库存统计数据
+- `getLocations()` - 获取所有仓库位置
+
+### 前端组件
+- `frontend/src/pages/stock/StockQuery.jsx` - 库存查询页面
+- `frontend/src/pages/stock/StockQuery.css` - 样式文件
+
+### 功能特性
+
+#### 1. 库存统计卡片
+- 总物资种类
+- 总库存金额
+- 预警物资数量（点击可快速筛选）
+- 紧急物资数量（点击可快速筛选）
+- 超储物资数量（点击可快速筛选）
+- 零库存物资数量
+
+#### 2. 库存列表
+- 显示物资名称、规格、单位、库存数量、可领数量、单价、库存金额
+- 显示存放位置、库存状态、最后入库/出库日期
+- 预警物资高亮显示
+- 支持综合搜索（物资名称/规格/位置）
+- 支持按物资名称、规格、位置、状态筛选
+- 支持分页和排序
+
+#### 3. 库存详情
+- 显示完整的基本信息
+- 显示库存上下限和预警值
+- 显示完整的出入库记录
+- 显示预警提示信息
+
+#### 4. 导出功能
+- 支持导出为 CSV 格式（带 BOM 支持中文）
+- 根据当前筛选条件导出
+- 包含库存状态字段
+
+### 业务规则
+- 库存预警状态根据 min_quantity、warning_quantity、max_quantity 自动计算
+- 预警物资在列表中高亮显示
+- 点击统计卡片可快速筛选对应状态的物资
+- 详情页面显示完整的出入库记录（最近100条）
+
+### 权限控制
+- 库存查询无需特殊权限（所有登录用户可查看）
+- 导出功能无需特殊权限
+
+### 页面路由
+- `/stock/query` - 库存查询页面
+
+========================
+
+## Task 45 实现详情 (2026-03-07)
+
+### 功能概述
+实现收入对账单每月25日自动生成功能：自动计算项目进度产值，生成月度对账单。
+
+### 对账单编号规则
+- 格式：ZD + YYMM + 项目编号后4位
+- 例：2025年3月项目XM2501001的对账单：ZD2503001
+
+### 数据库扩展
+
+#### 新建 income_statements 表（对账单主表）：
+- `id` - 主键
+- `statement_no` - 对账单编号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `contract_id` - 关联合同ID
+- `period_start` - 期间开始日期
+- `period_end` - 期间结束日期
+- `contract_amount` - 合同金额
+- `progress_amount` - 进度产值（已出库金额）
+- `progress_rate` - 进度百分比
+- `confirmed_amount` - 确认金额
+- `difference` - 差异
+- `status` - 状态: draft/confirmed
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+- `confirmed_at` - 确认时间
+- `confirmed_by` - 确认人ID
+
+#### 新建 income_statement_details 表（对账单明细）：
+- `id` - 主键
+- `statement_id` - 对账单ID
+- `item_name` - 项目名称
+- `description` - 描述
+- `amount` - 金额
+- `progress_value` - 进度值
+- `sort_order` - 排序号
+- `created_at` - 创建时间
+
+### 后端 API (backend/routes/incomeStatement.js)
+
+#### 对账单管理 API：
+- `GET /api/income-statements` - 获取对账单列表
+  - 支持按项目、状态、月份筛选
+  - 支持分页
+- `GET /api/income-statements/:id` - 获取对账单详情（含明细）
+- `POST /api/income-statements/generate` - 手动生成对账单
+- `POST /api/income-statements/generate-all` - 为所有活跃项目生成对账单
+- `PUT /api/income-statements/:id` - 更新对账单（仅草稿）
+- `POST /api/income-statements/:id/confirm` - 确认对账单
+- `DELETE /api/income-statements/:id` - 删除对账单（仅草稿）
+- `GET /api/income-statements/progress/:projectId` - 获取项目进度信息
+- `GET /api/income-statements/stats/overview` - 获取对账单统计概览
+
+### 后端服务 (backend/services/incomeStatementService.js)
+
+#### 核心方法：
+- `generateMonthly(projectId, options)` - 生成月度对账单
+- `calculateProgress(projectId)` - 计算项目进度产值
+- `syncContract(projectId)` - 同步合同信息
+- `getStatementById(id)` - 获取对账单详情
+- `getStatements(filters)` - 获取对账单列表
+- `updateStatement(id, updates)` - 更新对账单
+- `confirmStatement(id, userId)` - 确认对账单
+- `autoGenerateForAllProjects()` - 为所有活跃项目自动生成
+
+### 定时任务 (backend/services/incomeStatementScheduler.js)
+
+#### 使用 node-cron 实现：
+- 每月25日上午9点自动执行
+- 为所有活跃的实体项目生成对账单
+- 记录成功和失败的项目
+
+#### 定时任务管理：
+- `startScheduler()` - 启动定时任务
+- `stopScheduler()` - 停止定时任务
+- `getSchedulerStatus()` - 获取定时任务状态
+- `triggerManually()` - 手动触发一次
+
+### 前端组件
+- `frontend/src/pages/finance/IncomeStatement.jsx` - 对账单管理页面
+
+### 功能特性
+
+#### 1. 对账单列表
+- 显示对账单号、项目名称、期间、合同金额、进度比例、确认金额、差异、状态
+- 支持按项目、状态、月份筛选
+- 支持分页
+
+#### 2. 生成对账单
+- 选择项目（仅实体项目）
+- 选择对账期间（默认为上月）
+- 自动计算合同金额、进度比例、确认金额
+
+#### 3. 批量生成
+- 为所有活跃的实体项目生成对账单
+- 显示生成结果（成功/失败数量）
+
+#### 4. 编辑对账单
+- 修改进度比例（自动重新计算确认金额和差异）
+- 添加备注
+- 仅草稿状态可编辑
+
+#### 5. 确认对账单
+- 确认后不可修改
+- 记录确认人和确认时间
+
+#### 6. 对账单详情
+- 显示完整的基本信息
+- 显示金额统计（合同金额、进度比例、确认金额、差异）
+- 显示明细列表（已出库物资、已采购物资等）
+
+### 业务规则
+
+#### 生成对账单：
+- 只能为实体项目生成对账单
+- 每个项目每个期间只能生成一个对账单
+- 进度比例 = 已出库金额 / 合同金额 × 100%
+- 确认金额 = 合同金额 × 进度比例
+- 差异 = 进度产值 - 确认金额
+
+#### 进度计算：
+- 进度产值 = 已确认出库的物资总金额
+- 辅助参考：已审批采购金额（批量采购 + 零星采购）
+
+#### 确认规则：
+- 只有草稿状态可以确认
+- 确认后不可修改和删除
+
+### 权限控制
+- 所有对账单操作需要登录认证
+- 编辑和确认操作需要相应权限
+
+### 页面路由
+- `/finance/income-statement` - 收入对账单管理页面
+
+### 依赖安装
+- `npm install node-cron` - 定时任务依赖
+
+========================
+
+## Task 46 实现详情 (2026-03-07)
+
+### 功能概述
+实现收入对账单 - 产值确认功能：项目进度与产值关联，支持进度更新、进度历史查看、进度确认。
+
+### 数据库扩展
+
+#### income_statements 表扩展字段：
+- `accumulated_amount` - 累计产值
+- `progress_confirmed_by` - 进度确认人ID
+- `progress_confirmed_at` - 进度确认时间
+- `progress_status` - 进度状态: pending/confirmed
+
+#### 新建 income_statement_progress 表（进度历史表）：
+- `id` - 主键
+- `statement_id` - 对账单ID（必填）
+- `progress_rate` - 进度百分比（必填）
+- `progress_amount` - 当期产值
+- `accumulated_amount` - 累计产值
+- `remark` - 备注
+- `created_by` - 创建人ID
+- `created_at` - 创建时间
+
+### 后端 API (backend/routes/incomeStatement.js)
+
+#### 进度管理 API（Task 46 新增）：
+- `PUT /api/income-statements/:id/progress` - 更新进度产值
+  - 请求体: { progressRate, remark }
+  - 自动计算当期产值和累计产值
+  - 记录进度历史
+- `GET /api/income-statements/:id/progress-history` - 获取进度历史
+  - 返回所有进度变更记录
+- `POST /api/income-statements/:id/confirm-progress` - 确认进度
+  - 请求体: { comment }
+  - 确认后状态变为已确认
+- `GET /api/income-statements/project/:projectId/progress-stats` - 获取项目进度统计
+  - 返回项目整体进度统计信息
+
+### 后端服务 (backend/services/incomeStatementService.js)
+
+#### 进度管理方法（Task 46 新增）：
+- `updateProgress(id, progressRate, remark, userId)` - 更新进度产值
+  - 验证进度范围 (0-100%)
+  - 验证进度只能增加不能减少
+  - 验证产值不能超过合同金额
+  - 计算当期产值 = 进度百分比 × 合同金额
+  - 计算累计产值（基于上期累计）
+  - 记录进度历史
+- `getProgressHistory(id)` - 获取进度历史
+  - 返回对账单的所有进度变更记录
+- `confirmProgress(id, userId, comment)` - 确认进度
+  - 检查进度是否已填写
+  - 检查是否已确认
+  - 更新进度确认状态
+  - 同时确认对账单
+  - 记录确认操作到历史
+- `getProjectProgressStats(projectId)` - 获取项目进度统计
+  - 返回项目合同金额、最新进度、累计产值等统计信息
+
+### 前端组件
+- `frontend/src/pages/finance/IncomeStatement.jsx` - 更新，增加进度管理功能
+
+### 功能特性
+
+#### 1. 进度管理弹窗
+- 显示对账单基本信息
+- 显示当前进度和累计产值
+- 进度滑块/输入框（支持0-100%）
+- 实时预览当期产值和累计产值
+- 备注输入框
+- 业务规则提示：
+  - 进度范围：0-100%
+  - 进度只能增加不能减少
+  - 产值不能超过合同金额
+
+#### 2. 进度历史弹窗
+- 时间线形式展示所有进度变更
+- 每条记录显示：
+  - 进度百分比
+  - 当期产值
+  - 累计产值
+  - 备注
+  - 操作人和时间
+- 最新记录高亮显示
+
+#### 3. 进度确认功能
+- 确认前显示当前进度和确认金额
+- 确认后不可修改提示
+- 确认后同时更新对账单状态
+
+#### 4. 对账单列表增强
+- 新增"当期产值"列
+- 新增"累计产值"列
+- 进度比例使用进度条可视化显示
+- 操作按钮新增：
+  - 进度管理（蓝色图表图标）
+  - 进度历史（紫色历史图标）
+  - 确认进度（绿色确认图标）
+
+#### 5. 对账单详情增强
+- 进度信息使用环形进度条显示
+- 新增当期产值、累计产值统计卡片
+- 显示进度确认人和确认时间
+
+### 业务规则
+
+#### 进度更新规则：
+- 进度范围：0-100%
+- 进度只能增加不能减少
+- 产值不能超过合同金额
+- 当期产值 = 进度百分比 × 合同金额
+- 累计产值 = 当前进度对应的产值
+
+#### 进度确认规则：
+- 进度为0时不能确认
+- 已确认的进度不能重复确认
+- 确认进度同时确认对账单
+- 确认后不可修改
+
+#### 计算逻辑：
+- 当期产值 = 当前进度产值 - 上期累计产值
+- 累计产值 = 进度百分比 × 合同金额
+- 差异 = 当期产值 - 确认金额
+
+### 前端交互
+
+#### 进度管理弹窗组件：
+```jsx
+// 核心表单项
+<Form.Item name="progressRate" label="新进度百分比 (%)">
+  <InputNumber min={当前进度} max={100} precision={2} />
+</Form.Item>
+<Form.Item name="remark" label="备注">
+  <TextArea rows={3} />
+</Form.Item>
+
+// 实时预览
+{progressRate => (
+  <Card>
+    <Statistic title="预计当期产值" value={计算值} prefix="¥" />
+    <Statistic title="预计累计产值" value={计算值} prefix="¥" />
+  </Card>
+)}
+```
+
+#### 进度历史组件：
+```jsx
+<Timeline items={history.map(item => ({
+  color: 最新 ? 'green' : 'blue',
+  children: (
+    <div>
+      进度: {item.progress_rate}%
+      当期产值: ¥{item.progress_amount}
+      累计产值: ¥{item.accumulated_amount}
+      {item.remark && <div>{item.remark}</div>}
+      {item.creator_name} · {item.created_at}
+    </div>
+  )
+}))} />
+```
+
+### 权限控制
+- 进度更新需要登录认证
+- 进度确认需要相应权限
+- 所有操作记录操作人
+
+### 数据库索引
+- `idx_income_statement_progress_statement` - 对账单ID索引
+- `idx_income_statement_progress_created` - 创建时间索引
+
+### 页面路由
+- `/finance/income-statement` - 收入对账单管理页面（已集成进度功能）
+
+========================
+
+## Task 48 实现详情 (2026-03-07)
+
+### 功能概述
+实现材料款付款功能：材料款付款必须关联入库单，支持审批流程和支付确认。
+
+### 编号规则
+- 付款编号: CF + YYMMDD + 2位序号
+- 例: 2026年3月7日第1个: CF26030701
+- 每日重置序号
+
+### 数据库扩展
+
+#### 新建 material_payments 表（材料款付款主表）：
+- `id` - 主键
+- `payment_no` - 付款编号（唯一）
+- `stock_in_id` - 关联入库单ID（必填）
+- `project_id` - 关联项目ID（必填）
+- `supplier_id` - 供应商ID
+- `amount` - 付款金额
+- `status` - 状态: pending/approved/rejected/paid/cancelled
+- `approved_by` - 审批人ID
+- `approved_at` - 审批时间
+- `paid_by` - 支付人ID
+- `paid_at` - 支付时间
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 material_payment_approvals 表（付款审批记录）：
+- `id` - 主键
+- `payment_id` - 付款ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色（FINANCE/GM）
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### stock_in 表扩展字段：
+- `payment_status` - 付款状态: unpaid/paid
+
+### 后端 API (backend/routes/payment.js)
+
+#### 材料款付款管理 API：
+- `GET /api/payments/material` - 获取材料款付款列表
+  - 支持按关键词、状态、项目、供应商筛选
+  - 支持分页
+- `GET /api/payments/material/:id` - 获取付款详情
+  - 包含审批记录和入库单明细
+- `POST /api/payments/material` - 创建材料款付款
+  - 必须关联已确认的入库单
+  - 付款金额不能超过入库单金额
+  - 同一入库单不能重复创建付款
+- `PUT /api/payments/material/:id` - 更新付款（仅待审批状态）
+- `POST /api/payments/material/:id/approve` - 审批付款
+  - 支持通过/拒绝
+  - 两级审批：财务 → 总经理
+- `POST /api/payments/material/:id/pay` - 确认支付
+  - 仅已审批通过的付款可支付
+  - 支付后更新入库单付款状态
+- `DELETE /api/payments/material/:id` - 删除付款
+  - 仅待审批或已拒绝状态可删除
+
+#### 辅助 API：
+- `GET /api/payments/material/stock-in/available` - 获取可付款的入库单列表
+- `GET /api/payments/material/pending-approvals` - 获取待审批的付款列表
+- `GET /api/payments/material/statistics` - 获取付款统计数据
+
+### 前端组件
+- `frontend/src/pages/finance/MaterialPayment.jsx` - 材料款付款管理页面
+
+### 功能特性
+
+#### 1. 统计卡片
+- 付款总额
+- 待审批金额
+- 已审批金额
+- 已支付金额
+
+#### 2. 付款列表
+- 显示付款编号、入库单号、项目名称、供应商、入库金额、付款金额、状态
+- 显示申请人和申请时间
+- 支持搜索（编号/项目/供应商）
+- 支持状态筛选
+- 支持分页
+
+#### 3. 新建付款申请
+- 选择已确认的入库单
+- 显示入库单详情（项目、供应商、入库金额）
+- 填写付款金额（不能超过入库金额）
+- 填写备注
+- 提交后自动进入审批流程
+
+#### 4. 付款详情
+- 显示完整的基本信息
+- 显示供应商银行账户信息
+- 显示入库单物资明细
+- 显示审批流程进度
+
+#### 5. 审批功能
+- 显示付款信息
+- 填写审批意见
+- 支持通过/拒绝
+
+#### 6. 支付确认
+- 显示付款信息
+- 显示供应商银行账户
+- 确认后更新状态为已支付
+- 同时更新入库单付款状态
+
+### 业务规则
+
+#### 创建付款：
+- 必须关联已确认的入库单
+- 付款金额不能超过入库单金额
+- 同一入库单不能重复创建付款
+- 创建后自动进入审批流程
+
+#### 审批流程：
+- 步骤1：财务审批（FINANCE角色）
+- 步骤2：总经理审批（GM角色）
+- 任一步骤拒绝，付款状态变为 rejected
+- 所有步骤通过，付款状态变为 approved
+
+#### 支付确认：
+- 只有已审批通过的付款可以确认支付
+- 支付后状态变为 paid
+- 同时更新入库单 payment_status 为 paid
+- 支付后无法撤销
+
+#### 删除规则：
+- 只有待审批或已拒绝状态可以删除
+- 删除时同时删除审批记录
+
+### 权限控制
+- `payment:create` - 创建付款
+- `payment:edit` - 编辑付款
+- `payment:approve` - 审批付款
+- `payment:pay` - 确认支付
+- `payment:delete` - 删除付款
+
+### 页面路由
+- `/finance/material-payment` - 材料款付款管理页面
+
+========================
+
+## Task 47 实现详情 (2026-03-07)
+
+### 功能概述
+实现人工费付款功能：人工费付款必须关联收入对账单，付款金额不能超过对账单中的劳务金额。
+
+### 对账单编号规则
+- 格式：LF + YYMMDD + 2位序号
+- 例：2026年3月7日第1个：LF26030701
+- 每日重置序号
+
+### 数据库扩展
+
+#### labor_payments 表（人工费付款主表）：
+- `id` - 主键
+- `payment_no` - 付款编号（唯一）
+- `statement_id` - 关联对账单ID（必填）
+- `project_id` - 关联项目ID（必填）
+- `amount` - 付款金额
+- `payee_name` - 收款人姓名（必填）
+- `payee_account` - 收款账户
+- `bank_name` - 开户银行
+- `status` - 状态: pending/approved/paid/rejected
+- `approved_by` - 审批人ID
+- `approved_at` - 审批时间
+- `paid_by` - 支付人ID
+- `paid_at` - 支付时间
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### labor_payment_approvals 表（审批记录表）：
+- `id` - 主键
+- `payment_id` - 付款ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+### 后端 API (backend/routes/payment.js)
+
+#### 人工费付款管理 API：
+- `GET /api/payments/labor` - 获取人工费付款列表
+  - 支持按关键词、状态、项目、对账单筛选
+  - 支持分页
+- `GET /api/payments/labor/:id` - 获取付款详情（含审批记录）
+- `POST /api/payments/labor` - 创建付款申请
+- `PUT /api/payments/labor/:id` - 更新付款（仅待审批状态）
+- `DELETE /api/payments/labor/:id` - 删除付款（仅待审批或已拒绝状态）
+- `POST /api/payments/labor/:id/approve` - 审批付款
+- `POST /api/payments/labor/:id/pay` - 确认支付
+
+#### 辅助接口：
+- `GET /api/payments/labor/statement/:statementId/info` - 获取对账单劳务金额信息
+- `GET /api/payments/labor/statements/available` - 获取可付款的对账单列表
+- `GET /api/payments/labor/pending-approvals` - 获取待审批付款列表
+- `GET /api/payments/labor/statistics` - 获取付款统计数据
+
+### 前端组件
+- `frontend/src/pages/finance/LaborPayment.jsx` - 人工费付款管理页面
+
+### 功能特性
+
+#### 1. 付款列表
+- 显示付款编号、状态、关联对账单、项目、金额、收款人
+- 支持按项目、状态筛选
+- 支持分页
+
+#### 2. 新建付款
+- 必须选择已确认的对账单
+- 自动显示劳务金额、已付款金额、剩余可付金额
+- 付款金额不能超过剩余可付金额
+- 必须填写收款人姓名
+
+#### 3. 审批流程
+- 财务 → 总经理
+- 支持审批通过/驳回
+- 记录审批意见
+
+#### 4. 支付确认
+- 只有已审批通过的付款可以确认支付
+- 确认后状态变为 paid
+
+#### 5. 付款详情
+- 显示完整的付款信息
+- 显示审批流程记录
+- 显示对账单劳务金额信息
+
+### 业务规则
+
+#### 创建付款：
+- 必须关联已确认的收入对账单
+- 付款金额不能超过对账单劳务金额（确认金额的30%）
+- 累计付款金额不能超过劳务金额
+
+#### 劳务金额计算：
+- 劳务金额 = 对账单确认金额 × 30%
+- 剩余可付 = 劳务金额 - 已付款金额
+
+#### 审批流程：
+- 步骤1：财务审批（FINANCE 角色）
+- 步骤2：总经理审批（GM 角色）
+- 任一步骤拒绝则整个付款被拒绝
+
+#### 支付确认：
+- 只有已审批通过的付款可以确认支付
+- 支付后状态变为 paid
+- 支付后无法撤销
+
+#### 删除规则：
+- 只有待审批或已拒绝状态可以删除
+- 删除时同时删除审批记录
+
+### 权限控制
+- `payment:create` - 创建付款
+- `payment:edit` - 编辑付款
+- `payment:approve` - 审批付款
+- `payment:pay` - 确认支付
+- `payment:delete` - 删除付款
+
+### 页面路由
+- `/finance/labor-payment` - 人工费付款管理页面
+
+========================
+
+## Task 53 实现详情 (2026-03-07)
+
+### 功能概述
+实现甲方需求变更功能：甲方发起的需求变更流程，包含成本和工期影响评估，成本增加需财务确认。
+
+### 编号规则
+- 甲方需求变更编号: JF + YYMMDD + 2位序号
+- 例: 2026年3月7日第1个: JF26030701
+- 每日重置序号
+
+### 数据库扩展
+
+#### 新建 change_owner 表（甲方需求变更主表）：
+- `id` - 主键
+- `change_no` - 变更编号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `change_content` - 变更内容（必填）
+- `reason` - 变更原因（必填）
+- `impact_assessment` - 影响评估
+- `cost_impact` - 成本影响（金额）
+- `schedule_impact` - 工期影响（天数）
+- `status` - 状态: pending/pm_approved/finance_approved/approved/rejected/cancelled
+- `approver_id` - 审批人ID
+- `approved_at` - 审批时间
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 change_owner_approvals 表（审批记录表）：
+- `id` - 主键
+- `owner_change_id` - 甲方变更ID（必填）
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色: PM/FINANCE/GM
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+### 后端 API (backend/routes/change.js)
+
+#### 甲方需求变更管理 API：
+- `GET /api/changes/owner` - 获取甲方变更列表
+  - 支持按项目、状态、关键词筛选
+  - 支持分页
+- `GET /api/changes/owner/:id` - 获取变更详情（含审批记录）
+- `POST /api/changes/owner` - 创建甲方变更
+  - 必须填写变更内容和原因
+  - 填写成本和工期影响评估
+  - 成本增加时自动添加财务审批步骤
+- `POST /api/changes/owner/:id/approve` - 审批通过
+- `POST /api/changes/owner/:id/reject` - 审批拒绝
+- `GET /api/changes/owner/pending` - 获取待审批变更列表
+- `GET /api/changes/owner/stats` - 获取变更统计数据
+- `DELETE /api/changes/owner/:id` - 删除变更（仅待审批或已拒绝状态）
+
+### 前端组件
+- `frontend/src/pages/change/OwnerChange.jsx` - 甲方需求变更管理页面
+- `frontend/src/pages/change/ChangeCommon.css` - 共用样式文件
+
+### 功能特性
+
+#### 1. 变更列表
+- 显示变更编号、项目、变更内容、成本影响、工期影响、状态
+- 支持搜索（编号/内容/项目）
+- 支持状态筛选
+- 支持分页
+
+#### 2. 统计卡片
+- 总变更数
+- 待审批数
+- 已通过数
+- 已拒绝数
+- 已通过成本影响总额
+
+#### 3. 新建变更
+- 选择关联项目（必填）
+- 填写变更内容（必填）
+- 填写变更原因（必填）
+- 填写影响评估（技术、质量、安全等方面）
+- 填写成本影响（元）
+- 填写工期影响（天）
+- 填写备注
+
+#### 4. 影响评估
+- 成本影响显示为金额
+- 工期影响显示为天数
+- 使用卡片形式直观展示
+
+#### 5. 审批流程
+- 无成本增加：项目经理 → 总经理
+- 有成本增加：项目经理 → 财务（成本确认） → 总经理
+
+#### 6. 审批记录
+- 时间线形式展示审批流程
+- 显示每步审批状态、审批人、意见、时间
+
+### 业务规则
+
+#### 创建变更：
+- 必须关联项目
+- 必须填写变更内容和原因
+- 成本影响和工期影响默认为0
+- 成本影响大于0时需要财务确认
+
+#### 审批流程：
+- 步骤1：项目经理审批（PM 角色）
+- 步骤2：财务审批（仅当成本影响 > 0，FINANCE 角色）
+- 步骤3：总经理审批（GM 角色）
+- 任一步骤拒绝则整个变更被拒绝
+
+#### 删除规则：
+- 只有待审批或已拒绝状态可以删除
+- 只有创建人可以删除
+- 删除时同时删除审批记录
+
+### 权限控制
+- `change:create` - 创建变更
+- `change:approve` - 审批变更
+
+### 页面路由
+- `/change/owner` - 甲方需求变更管理页面
+
+========================
+
+## Task 49 实现详情 (2026-03-07)
+
+### 功能概述
+实现成本汇总报表功能：项目成本统计和分析，支持按项目、分类、趋势等多种维度查看和导出。
+
+### 成本分类
+- **人工费**：人工费付款金额
+- **材料费**：材料款付款 + 批量采购 + 零星采购
+- **设备费**：预留扩展
+- **其他费用**：预留扩展
+
+### 汇总数据
+- 合同金额：所有已审批收入合同总金额
+- 总成本：各分类成本之和
+- 已付金额：已支付的人工费 + 材料费
+- 待付金额：待支付的人工费 + 材料费
+- 利润：合同金额 - 总成本
+- 利润率：利润 / 合同金额 × 100%
+
+### 后端 API (backend/routes/report.js)
+
+#### 成本报表 API：
+- `GET /api/reports/cost/summary` - 获取成本汇总
+  - 查询参数: projectId (可选)
+  - 返回汇总数据和分类统计
+- `GET /api/reports/cost/by-project` - 按项目统计成本
+  - 查询参数: page, pageSize, keyword, status
+  - 返回项目列表和成本明细
+- `GET /api/reports/cost/by-category` - 按类别统计成本
+  - 查询参数: projectId (可选)
+  - 返回分类统计和明细
+- `GET /api/reports/cost/trend` - 获取成本趋势
+  - 查询参数: projectId (可选), months (默认12)
+  - 返回月度趋势数据
+- `GET /api/reports/cost/export` - 导出成本报表
+  - 查询参数: projectId (可选), format (json/csv)
+  - 返回文件下载
+- `GET /api/reports/cost/projects` - 获取项目列表（用于筛选）
+
+### 后端服务 (backend/services/reportService.js)
+
+#### 核心方法：
+- `getCostSummary(projectId)` - 获取成本汇总
+  - 计算合同金额、成本、利润等
+  - 按分类统计（人工费、材料费等）
+- `getCostByProject(options)` - 按项目统计成本
+  - 支持分页、搜索、筛选
+  - 为每个项目计算成本明细
+- `getCostByCategory(projectId)` - 按类别统计成本
+  - 返回分类汇总和明细列表
+  - 包含人工费、材料费、采购明细
+- `getCostTrend(projectId, months)` - 获取成本趋势
+  - 按月统计成本变化
+  - 返回月度数据和汇总
+- `exportCostReport(projectId, format)` - 导出成本报表
+  - 支持 JSON 和 CSV 格式
+  - 包含完整的报表数据
+- `getProjectList()` - 获取项目列表（用于筛选）
+
+### 前端组件
+- `frontend/src/pages/report/CostReport.jsx` - 成本汇总报表页面
+
+### 功能特性
+
+#### 1. 汇总统计卡片
+- 合同金额（带说明提示）
+- 总成本
+- 已付金额（带进度条）
+- 利润（带利润率标签）
+
+#### 2. 成本分类卡片
+- 人工费：金额、已付、待付、占比
+- 材料费：金额、已付、待付、占比
+- 设备费：预留扩展
+- 其他费用：预留扩展
+- 每个分类带进度条显示占比
+
+#### 3. 分类统计标签页
+- 饼图显示成本分布
+- 表格显示分类明细
+
+#### 4. 成本趋势标签页
+- 堆叠柱状图显示月度成本
+- 折线图显示总成本趋势
+- 统计卡片：统计月数、累计成本、月均成本
+
+#### 5. 项目统计标签页
+- 表格显示各项目成本
+- 列：项目编号、名称、合同金额、总成本、已付金额、待付金额、利润、利润率、状态
+- 支持分页
+
+#### 6. 分类明细标签页
+- 人工费明细：付款单号、项目、收款人、金额、状态、日期
+- 材料费明细：付款单号、项目、供应商、金额、状态、日期
+- 采购明细：单号、类型、项目、金额、状态、日期
+
+#### 7. 项目筛选
+- 下拉选择项目，查看单个项目的成本报表
+- 清空选择查看全部项目汇总
+
+#### 8. 导出功能
+- 导出 CSV 格式（支持中文）
+- 导出 JSON 格式
+
+### 业务规则
+
+#### 成本计算：
+- 合同金额 = 所有已审批收入合同金额之和
+- 人工费 = 人工费已付 + 人工费待付
+- 材料费 = 材料款已付 + 材料款待付 + 批量采购 + 零星采购
+- 总成本 = 人工费 + 材料费 + 设备费 + 其他费用
+- 已付总额 = 人工费已付 + 材料费已付
+- 待付总额 = 人工费待付 + 材料费待付
+- 利润 = 合同金额 - 总成本
+- 利润率 = 利润 / 合同金额 × 100%
+
+#### 趋势计算：
+- 按月统计各项成本支出
+- 包含人工费、材料款、采购金额
+- 计算月度总成本和平均成本
+
+#### 导出规则：
+- CSV 格式：汇总数据 + 分类数据
+- JSON 格式：完整的报表数据结构
+- 文件名包含日期
+
+### 页面路由
+- `/report/cost` - 成本汇总报表页面
+
+### 图表库
+- 使用 ECharts 实现图表
+- 饼图：成本分布
+- 堆叠柱状图 + 折线图：成本趋势
+
+========================
+
+## Task 50 实现详情 (2026-03-07)
+
+### 功能概述
+实现超量采购变更申请功能：采购超出合同约定时需要提交变更申请，经过审批流程后才能执行。
+
+### 编号规则
+- 变更编号：CG + YYMMDD + 2位序号
+- 例：2026年3月7日第1个变更：CG26030701
+- 每日重置序号
+
+### 数据库扩展
+
+#### 新建 change_overage 表（超量采购变更主表）：
+- `id` - 主键
+- `change_no` - 变更编号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `contract_id` - 关联合同ID（必填）
+- `overage_type` - 超量类型：quantity/amount/price/material
+- `overage_amount` - 超量金额
+- `reason` - 超量原因（必填）
+- `status` - 状态：pending/budget_approved/finance_approved/approved/rejected/cancelled
+- `approver_id` - 最终审批人ID
+- `approved_at` - 审批通过时间
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 change_overage_approvals 表（审批记录表）：
+- `id` - 主键
+- `overage_id` - 关联超量变更ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色（BUDGET/FINANCE/GM）
+- `approver_id` - 审批人ID
+- `action` - 动作：pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+### 后端 API (backend/routes/change.js)
+
+#### 超量采购变更 API：
+- `GET /api/changes/overage` - 获取超量采购申请列表
+  - 支持按项目、合同、状态筛选
+  - 支持关键词搜索
+  - 支持分页
+- `GET /api/changes/overage/:id` - 获取超量采购申请详情
+  - 返回完整信息
+  - 包含审批记录列表
+- `POST /api/changes/overage` - 创建超量采购申请
+  - 验证必填字段
+  - 自动生成变更编号
+  - 自动创建审批流程
+- `PUT /api/changes/overage/:id` - 更新超量采购申请（仅待审批状态）
+- `DELETE /api/changes/overage/:id` - 删除超量采购申请（仅待审批/已拒绝状态）
+- `POST /api/changes/overage/:id/approve` - 审批通过
+  - 根据当前步骤推进审批流程
+  - 更新状态
+- `POST /api/changes/overage/:id/reject` - 审批拒绝
+  - 要求填写拒绝原因
+- `GET /api/changes/overage/pending` - 获取待审批列表（按角色筛选）
+- `GET /api/changes/overage/projects/:projectId/contracts` - 获取项目的支出合同列表
+- `GET /api/changes/overage/stats` - 获取超量采购变更统计
+
+### 前端组件
+- `frontend/src/pages/change/OverageChange.jsx` - 超量采购变更管理页面
+- `frontend/src/pages/change/OverageChange.css` - 样式文件
+
+### 功能特性
+
+#### 1. 统计卡片
+- 总申请数
+- 待审批数量（黄色高亮）
+- 已通过数量（绿色高亮）
+- 已拒绝数量（红色高亮）
+- 已通过超量金额（蓝色高亮）
+
+#### 2. 超量采购列表
+- 显示变更编号、关联项目、关联合同
+- 显示超量类型和超量金额
+- 显示审批状态（带颜色标签）
+- 支持按状态筛选
+- 支持关键词搜索
+- 支持分页
+
+#### 3. 新建申请弹窗
+- 选择关联项目（下拉）
+- 选择关联合同（自动加载项目的已审批支出合同）
+- 选择超量类型：数量超量/金额超量/价格超量/材料超量
+- 填写超量金额
+- 填写超量原因（必填）
+- 填写备注（选填）
+- 显示审批流程提示
+
+#### 4. 申请详情弹窗
+- 显示完整的基本信息
+- 显示超量原因和备注
+- 显示申请人、申请时间
+- 显示审批记录时间线
+  - 预算员审批
+  - 财务审批
+  - 总经理审批
+- 每个审批步骤显示：状态、审批人、意见、时间
+
+#### 5. 审批功能
+- 根据用户角色判断是否可以审批
+  - 预算员：可审批 pending 状态
+  - 财务：可审批 budget_approved 状态
+  - 总经理：可审批所有待审批状态
+- 审批通过：推进到下一审批步骤
+- 审批拒绝：填写拒绝原因，终止流程
+
+### 业务规则
+
+#### 审批流程：
+1. 预算员审批 → 状态变为 budget_approved
+2. 财务审批 → 状态变为 finance_approved
+3. 总经理审批 → 状态变为 approved
+
+#### 状态说明：
+- pending：待审批（预算员待审）
+- budget_approved：预算员已审（财务待审）
+- finance_approved：财务已审（总经理待审）
+- approved：审批通过
+- rejected：已拒绝
+- cancelled：已取消
+
+#### 操作权限：
+- 创建申请：需要 purchase:create 权限
+- 编辑申请：仅待审批状态可编辑，需要 purchase:edit 权限
+- 删除申请：仅待审批或已拒绝状态可删除，需要 purchase:delete 权限
+- 审批：需要 purchase:approve 权限，且角色需匹配当前审批步骤
+
+### 页面路由
+- `/change/overage` - 超量采购变更管理页面
+
+========================
+
+## Task 55 实现详情 (2026-03-07)
+
+### 功能概述
+实现施工进度定期填报功能，支持关联里程碑、记录工作内容、问题和下周计划，以及进度曲线图展示。
+
+### 数据库扩展
+
+#### construction_progress 表：
+- `id` - 主键
+- `progress_no` - 填报编号 (PR + 年月 + 序号，如 PR260307001)
+- `project_id` - 关联项目ID
+- `milestone_id` - 关联里程碑ID（可选）
+- `report_date` - 填报日期
+- `progress_rate` - 进度百分比 (0-100)
+- `work_content` - 本周/本月工作内容
+- `issues` - 存在问题
+- `next_plan` - 下周/下月计划
+- `reporter_id` - 填报人ID
+- `status` - 状态 (draft/submitted)
+- `remark` - 备注
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 索引：
+- `idx_construction_progress_no` - 填报编号索引
+- `idx_construction_progress_project` - 项目索引
+- `idx_construction_progress_milestone` - 里程碑索引
+- `idx_construction_progress_reporter` - 填报人索引
+- `idx_construction_progress_date` - 填报日期索引
+- `idx_construction_progress_status` - 状态索引
+
+### 后端 API
+
+#### 进度填报相关接口：
+- `GET /api/construction/progress` - 获取进度填报列表
+  - 查询参数: project_id, milestone_id, reporter_id, start_date, end_date, page, pageSize
+- `GET /api/construction/progress/:id` - 获取进度填报详情
+- `POST /api/construction/progress` - 创建进度填报
+- `PUT /api/construction/progress/:id` - 更新进度填报
+- `DELETE /api/construction/progress/:id` - 删除进度填报
+- `GET /api/construction/progress/project/:projectId/chart` - 获取项目进度曲线图数据
+- `GET /api/construction/progress/stats/overview` - 获取进度填报统计概览
+- `GET /api/construction/progress/project/:projectId/milestones` - 获取项目的里程碑列表
+
+### 前端页面
+
+#### ProgressReport.jsx 功能：
+1. **填报列表**
+   - 支持按项目、日期范围筛选
+   - 显示填报编号、项目、里程碑、日期、进度、工作内容、填报人
+   - 支持编辑和删除操作
+
+2. **新建填报**
+   - 关联项目（必填）
+   - 关联里程碑（可选，从项目里程碑列表选择）
+   - 填报日期（默认今天）
+   - 进度百分比（0-100% 滑块选择）
+   - 本周/本月工作内容
+   - 存在问题
+   - 下周/下月计划
+   - 备注
+
+3. **进度曲线图**
+   - 使用 recharts 绘制 S 曲线
+   - 显示实际进度曲线
+   - 展示关联的里程碑节点
+
+4. **统计概览**
+   - 总填报数
+   - 本月填报数
+   - 最新进度百分比
+   - 最近填报日期
+
+### 业务规则
+
+#### 填报规则：
+- 每周/每月定期填报
+- 进度百分比范围 0-100%
+- 必须关联项目
+- 可选择性关联里程碑
+- 填报后自动标记为 submitted 状态
+
+#### 进度编号规则：
+- 格式：PR + 年月(4位) + 序号(3位)
+- 示例：PR260307001
+
+### 页面路由
+- `/construction/progress` - 进度填报管理页面
+
+========================
+
+## Task 58 实现详情 (2026-03-07)
+
+### 功能概述
+实现竣工图纸上传和管理功能：支持多文件上传、图纸预览、下载、删除，提供网格和列表两种视图。
+
+### 数据库扩展
+
+#### completion_drawings 表（竣工图纸表）：
+- `id` - 主键
+- `project_id` - 关联项目ID（必填）
+- `drawing_name` - 图纸名称
+- `drawing_type` - 图纸类型: general/architecture/structure/mep/landscape/interior/other
+- `file_path` - 文件存储路径
+- `file_size` - 文件大小（字节）
+- `upload_date` - 上传日期
+- `uploader_id` - 上传人ID
+- `remark` - 备注
+- `created_at` - 创建时间
+
+#### 索引：
+- `idx_completion_drawings_project` - 项目ID索引
+- `idx_completion_drawings_type` - 图纸类型索引
+- `idx_completion_drawings_upload_date` - 上传日期索引
+
+### 后端 API (backend/routes/completion.js)
+
+#### 图纸管理 API：
+- `GET /api/completion/drawings` - 获取图纸列表
+  - 支持按项目、类型、关键词筛选
+  - 支持分页
+  - 返回图纸基本信息和缩略图URL
+- `GET /api/completion/drawings/:id` - 获取图纸详情
+- `POST /api/completion/drawings` - 上传图纸（支持多文件）
+  - 支持同时上传多个文件（最多20个）
+  - 自动生成文件名
+  - 文件格式验证（JPG、PNG、PDF）
+  - 文件大小限制（50MB）
+- `DELETE /api/completion/drawings/:id` - 删除图纸
+  - 权限检查：上传者、项目经理或管理员可删除
+  - 同时删除文件和数据库记录
+- `GET /api/completion/drawings/:id/download` - 下载图纸
+  - 支持中文文件名
+  - 自动设置正确的 Content-Type
+
+#### 辅助 API：
+- `GET /api/completion/drawings/stats/overview` - 获取图纸统计概览
+  - 总数、总大小
+  - 按类型统计
+  - 按项目统计
+- `GET /api/completion/drawings/projects/list` - 获取有图纸的项目列表
+
+### 前端组件
+- `frontend/src/pages/completion/DrawingUpload.jsx` - 竣工图纸管理页面
+
+### 功能特性
+
+#### 1. 统计卡片
+- 图纸总数
+- 存储空间使用
+- 关联项目数
+- 图纸类型数
+
+#### 2. 图纸列表（网格视图）
+- 缩略图展示
+- 图纸名称、类型、项目
+- 文件大小、上传日期
+- 预览、下载、删除操作
+
+#### 3. 图纸上传
+- 选择关联项目（必填）
+- 选择图纸类型
+- 多文件选择（最多20个）
+- 文件格式验证（JPG、PNG、PDF）
+- 文件大小验证（50MB限制）
+- 备注填写
+
+#### 4. 图纸预览
+- 图片文件直接预览
+- PDF 文件显示图标，提示下载
+- 显示详细信息（类型、大小、上传人、日期）
+- 提供下载按钮
+
+#### 5. 图纸下载
+- 支持中文文件名
+- 自动设置正确的 MIME 类型
+
+### 图纸类型配置
+- 总图（general）- 蓝色
+- 建筑图（architecture）- 绿色
+- 结构图（structure）- 橙色
+- 机电图（mep）- 紫色
+- 景观图（landscape）- 青色
+- 室内图（interior）- 洋红色
+- 其他（other）- 默认灰色
+
+### 业务规则
+
+#### 文件上传规则：
+- 支持格式：JPG、PNG、PDF
+- 单个文件最大：50MB
+- 同时上传：最多20个文件
+- 必须关联项目
+
+#### 删除权限：
+- 上传者可删除自己上传的图纸
+- 项目经理可删除关联项目的图纸
+- 管理员可删除所有图纸
+
+#### 文件存储：
+- 存储目录：backend/uploads/drawings/
+- 文件名格式：时间戳-随机数.扩展名
+- 原始文件名保存在 drawing_name 字段
+
+### 页面路由
+- `/completion/drawings` - 竣工图纸管理页面
+
+========================
+
+## Task 59 实现详情 (2026-03-07)
+
+### 功能概述
+实现项目文档归档管理功能：支持多种文档格式的上传、下载、分类管理和删除。
+
+### 数据库扩展
+
+#### completion_documents 表（文档归档表）：
+- `id` - 主键
+- `project_id` - 关联项目ID（必填）
+- `doc_name` - 文档名称
+- `doc_type` - 文档分类: contract/technical/construction/acceptance/other
+- `file_path` - 文件存储路径
+- `file_size` - 文件大小（字节）
+- `upload_date` - 上传日期
+- `uploader_id` - 上传人ID
+- `remark` - 备注
+- `created_at` - 创建时间
+
+#### 索引：
+- `idx_completion_documents_project` - 项目ID索引
+- `idx_completion_documents_type` - 文档类型索引
+- `idx_completion_documents_upload_date` - 上传日期索引
+
+### 后端 API (backend/routes/completion.js)
+
+#### 文档管理 API：
+- `GET /api/completion/documents` - 获取文档列表
+  - 支持按项目、类型、关键词筛选
+  - 支持分页
+- `GET /api/completion/documents/:id` - 获取文档详情
+- `POST /api/completion/documents` - 上传文档（支持多文件）
+  - 支持同时上传多个文件（最多20个）
+  - 自动生成文件名
+  - 文件格式验证（PDF、Word、Excel、图片、压缩包等）
+  - 文件大小限制（100MB）
+- `DELETE /api/completion/documents/:id` - 删除文档
+  - 权限检查：上传者、项目经理或管理员可删除
+  - 同时删除文件和数据库记录
+- `GET /api/completion/documents/:id/download` - 下载文档
+  - 支持中文文件名
+  - 自动设置正确的 Content-Type
+
+#### 辅助 API：
+- `GET /api/completion/documents/stats/overview` - 获取文档统计概览
+  - 总数、总大小
+  - 按类型统计
+  - 按项目统计
+- `GET /api/completion/documents/projects/list` - 获取有文档的项目列表
+
+### 前端组件
+- `frontend/src/pages/completion/DocArchive.jsx` - 文档归档管理页面
+
+### 功能特性
+
+#### 1. 统计卡片
+- 文档总数
+- 存储空间使用
+- 各分类文档数量
+
+#### 2. 文档列表
+- 文件图标（根据类型显示）
+- 文档名称、关联项目、文档分类
+- 文件大小、上传人、上传日期、备注
+- 查看、下载、删除操作
+- 支持分页
+
+#### 3. 文档上传
+- 选择关联项目（必填）
+- 选择文档分类
+- 多文件选择（最多20个）
+- 拖拽上传支持
+- 文件格式验证（PDF、Word、Excel、图片、压缩包等）
+- 文件大小验证（100MB限制）
+- 备注填写
+
+#### 4. 文档详情
+- 显示完整文档信息
+- 提供下载按钮
+
+#### 5. 文档下载
+- 支持中文文件名
+- 自动设置正确的 MIME 类型
+
+### 文档分类配置
+- 合同文件（contract）- 蓝色
+- 技术文档（technical）- 绿色
+- 施工记录（construction）- 橙色
+- 验收报告（acceptance）- 紫色
+- 其他（other）- 默认灰色
+
+### 业务规则
+
+#### 文件上传规则：
+- 支持格式：PDF、Word、Excel、图片（JPG、PNG、GIF）、压缩包（ZIP、RAR）、文本文件
+- 单个文件最大：100MB
+- 同时上传：最多20个文件
+- 必须关联项目
+
+#### 删除权限：
+- 上传者可删除自己上传的文档
+- 项目经理可删除关联项目的文档
+- 管理员可删除所有文档
+
+#### 文件存储：
+- 存储目录：backend/uploads/documents/
+- 文件名格式：时间戳-随机数.扩展名
+- 原始文件名保存在 doc_name 字段
+
+### 页面路由
+- `/completion/doc-archive` - 文档归档管理页面
+
+========================
+
+## Task 57 实现详情 (2026-03-07)
+
+### 功能概述
+实现竣工后劳务费用结算功能：竣工后结算工人劳务费，支持创建结算、审批流程、支付确认。
+
+### 编号规则
+- 结算单号: JS + YYMM + 3位序号
+- 例: 2026年3月第1个: JS2603001
+- 每月重置序号
+
+### 数据库扩展
+
+#### 新建 completion_labor_settlements 表（劳务结算主表）：
+- `id` - 主键
+- `settlement_no` - 结算单号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `worker_name` - 工人姓名（必填）
+- `work_type` - 工种（必填）
+- `work_days` - 工日数
+- `daily_rate` - 日工资
+- `total_amount` - 总金额
+- `deduction` - 扣款金额
+- `actual_amount` - 实发金额
+- `status` - 状态: pending/approved/paid/rejected
+- `approver_id` - 审批人ID
+- `approved_at` - 审批时间
+- `paid_by` - 支付人ID
+- `paid_at` - 支付时间
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 completion_labor_settlement_approvals 表（审批记录表）：
+- `id` - 主键
+- `settlement_id` - 关联结算ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色（FINANCE/GM）
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 索引：
+- `idx_completion_labor_settlements_no` - 结算单号索引
+- `idx_completion_labor_settlements_project` - 项目ID索引
+- `idx_completion_labor_settlements_status` - 状态索引
+- `idx_completion_labor_settlements_worker` - 工人姓名索引
+- `idx_completion_labor_settlements_created` - 创建时间索引
+- `idx_completion_labor_settlement_approvals_settlement` - 结算ID索引
+- `idx_completion_labor_settlement_approvals_role` - 角色索引
+
+### 后端 API (backend/routes/completion.js)
+
+#### 劳务结算管理 API：
+- `GET /api/completion/labor-settlement` - 获取结算列表
+  - 支持按状态、项目、关键词筛选
+  - 支持分页
+- `GET /api/completion/labor-settlement/:id` - 获取结算详情
+  - 包含审批记录
+  - 包含项目已付款金额
+- `POST /api/completion/labor-settlement` - 创建结算
+  - 自动计算总金额和实发金额
+  - 自动创建审批流程
+- `PUT /api/completion/labor-settlement/:id` - 更新结算（仅待审批状态）
+- `DELETE /api/completion/labor-settlement/:id` - 删除结算（仅待审批或已驳回状态）
+- `POST /api/completion/labor-settlement/:id/approve` - 审批结算
+  - 支持通过/驳回
+  - 两级审批：财务 → 总经理
+- `POST /api/completion/labor-settlement/:id/pay` - 确认支付
+  - 仅已审批通过的结算可支付
+
+#### 辅助 API：
+- `GET /api/completion/labor-settlement/projects/completed` - 获取可结算的项目列表
+- `GET /api/completion/labor-settlement/project/:projectId/stats` - 获取项目结算统计
+- `GET /api/completion/labor-settlement/pending-approvals` - 获取待审批列表
+- `GET /api/completion/labor-settlement/statistics` - 获取统计概览
+
+### 前端组件
+- `frontend/src/pages/completion/LaborSettlement.jsx` - 劳务结算管理页面
+
+### 功能特性
+
+#### 1. 统计卡片
+- 结算总数
+- 待审批数
+- 已审批数
+- 已支付数
+- 待付金额
+- 已付金额
+
+#### 2. 结算列表
+- 显示结算单号、状态、项目、工人姓名、工种、工日、日工资、总金额、扣款、实发金额
+- 支持搜索（结算单号/工人/项目）
+- 支持按项目、状态筛选
+- 支持分页
+
+#### 3. 新建结算
+- 选择关联项目（必填）
+- 输入工人姓名（必填）
+- 选择工种（木工、钢筋工、混凝土工、瓦工等）
+- 输入工日数
+- 输入日工资
+- 输入扣款金额（如有）
+- 自动计算总金额和实发金额
+- 填写备注
+
+#### 4. 结算详情
+- 显示完整的基本信息
+- 显示审批流程（Steps 组件）
+- 显示项目结算统计
+
+#### 5. 审批功能
+- 显示结算信息
+- 选择通过/驳回
+- 填写审批意见
+
+#### 6. 支付确认
+- 显示结算信息
+- 填写支付备注（银行流水号等）
+- 确认后更新状态为已支付
+
+#### 7. 项目统计
+- 点击项目名称可查看项目结算统计
+- 显示结算总笔数、总金额、扣款总额
+- 显示已支付、待支付、待审批金额
+
+### 工种类型
+- 木工、钢筋工、混凝土工、瓦工、抹灰工
+- 油漆工、电工、水暖工、架子工、焊工
+- 机械工、普工、其他
+
+### 业务规则
+
+#### 创建结算：
+- 必须关联项目
+- 必须填写工人姓名和工种
+- 工日必须大于0
+- 日工资必须大于0
+- 总金额 = 工日 × 日工资
+- 实发金额 = 总金额 - 扣款
+
+#### 审批流程：
+- 步骤1：财务审批（FINANCE 角色）
+- 步骤2：总经理审批（GM 角色）
+- 任一步骤驳回，结算状态变为 rejected
+- 所有步骤通过，结算状态变为 approved
+
+#### 支付确认：
+- 只有已审批通过的结算可以确认支付
+- 支付后状态变为 paid
+- 支付后无法撤销
+
+#### 删除规则：
+- 只有待审批或已驳回状态可以删除
+- 删除时同时删除审批记录
+
+#### 修改规则：
+- 只有待审批状态可以修改
+- 修改后重新计算金额
+
+### 权限控制
+- 创建结算：需要登录认证
+- 编辑结算：仅待审批状态可编辑
+- 删除结算：仅待审批或已驳回状态可删除
+- 审批：需要相应角色权限
+- 支付：需要登录认证
+
+### 页面路由
+- `/completion/labor-settlement` - 劳务结算管理页面
+
+========================
+
+## Task 6 实现详情 (2026-03-07)
+
+### 功能概述
+实现短信验证码发送间隔控制：60秒内不可重复发送验证码。
+
+### 后端实现 (backend/models/Auth.js)
+
+#### SmsCode.createCode() 方法：
+- 发送验证码前检查最近60秒内是否已发送
+- 查询数据库中手机号对应的最新验证码记录
+- 如果60秒内已发送，计算剩余等待秒数并返回
+- 如果可以发送，生成新的6位验证码并保存
+
+#### 核心逻辑：
+```javascript
+// 检查是否在60秒内已发送
+const recentCode = db.prepare(`
+  SELECT created_at
+  FROM sms_codes
+  WHERE phone = ?
+    AND created_at > datetime('now', '-60 seconds')
+  ORDER BY created_at DESC
+  LIMIT 1
+`).get(phone);
+
+if (recentCode) {
+  const sentTime = new Date(recentCode.created_at);
+  const now = new Date();
+  const waitSeconds = 60 - Math.floor((now - sentTime) / 1000);
+  return { success: false, waitTime: waitSeconds };
+}
+```
+
+#### API 响应：
+- 发送成功：`{ success: true, message: '验证码已发送' }`
+- 发送失败：`{ success: false, message: '请等待 X 秒后再试', waitTime: X }`
+
+### 前端实现 (frontend/src/pages/LoginVerify.jsx)
+
+#### 倒计时状态管理：
+- `countdown` 状态：当前倒计时秒数
+- `sendingCode` 状态：发送中加载状态
+
+#### 核心功能：
+1. **倒计时效果**（useEffect）：
+```javascript
+useEffect(() => {
+  if (countdown > 0) {
+    const timer = setTimeout(() => {
+      setCountdown(countdown - 1);
+    }, 1000);
+    return () => clearTimeout(timer);
+  }
+}, [countdown]);
+```
+
+2. **发送验证码**（handleSendCode）：
+```javascript
+const handleSendCode = async () => {
+  // 倒计时期间不允许发送
+  if (countdown > 0) return;
+
+  try {
+    const response = await axios.post('/api/auth/send-sms', {
+      phone: user.phone
+    });
+
+    if (response.data.success) {
+      message.success('验证码已发送');
+      setCountdown(60); // 开始60秒倒计时
+    } else if (response.data.waitTime) {
+      // 服务器返回剩余等待时间，同步倒计时
+      message.warning(`请等待 ${response.data.waitTime} 秒后再试`);
+      setCountdown(response.data.waitTime);
+    }
+  } catch (error) {
+    const waitTime = error.response?.data?.waitTime;
+    if (waitTime) {
+      setCountdown(waitTime);
+    }
+  }
+};
+```
+
+3. **按钮显示**：
+- 正常状态：显示"获取验证码"
+- 倒计时中：显示"X秒后重发"
+- 倒计时期间按钮禁用且变灰
+
+### 用户体验优化
+
+#### 双重限制机制：
+1. 前端限制：点击发送后立即开始60秒倒计时，期间禁用按钮
+2. 后端限制：即使前端被绕过，后端也会检查并返回剩余等待时间
+
+#### 错误处理：
+- 前端倒计时与后端返回时间自动同步
+- 显示友好的提示信息
+- 防止暴力刷验证码
+
+#### 开发模式：
+- 开发环境返回验证码明文用于测试
+- 生产环境不返回验证码
+
+### 业务规则
+
+#### 发送规则：
+- 同一手机号60秒内只能发送一次验证码
+- 验证码有效期为5分钟
+- 验证码使用后自动标记为已使用
+
+#### 防刷机制：
+- 前端倒计时限制
+- 后端时间检查
+- 数据库记录所有发送历史
+
+### 数据库设计
+
+#### sms_codes 表：
+- `id` - 主键
+- `phone` - 手机号
+- `code` - 验证码
+- `used` - 是否已使用（0/1）
+- `created_at` - 创建时间
+- `expires_at` - 过期时间
+
+#### 索引：
+- `idx_sms_codes_phone` - 手机号和创建时间联合索引
+
+========================
+
+## Task 14 实现详情 (2026-03-07)
+
+### 功能概述
+实现用户创建时自动生成企业邮箱功能：新建用户时自动生成 企业邮箱地址（用户名@公司域名）。
+
+### 邮箱地址生成规则
+- 格式：用户名 + 企业域名
+- 默认域名：@mochu.com
+- 示例：用户名为 zhangsan，生成企业邮箱 zhangsan@mochu.com
+
+### 数据库字段（已存在）
+
+#### users 表企业邮箱字段：
+- `company_email` - 企业邮箱地址（唯一）
+- `email_enabled` - 邮箱是否启用（默认1）
+- `email_disabled_at` - 邮箱禁用时间
+- `email_disabled_reason` - 邮箱禁用原因
+
+### 后端服务 (backend/services/email.js)
+
+#### 核心方法：
+- `createCompanyEmail(userId, username)` - 创建企业邮箱
+  - 检查用户是否存在
+  - 生成企业邮箱地址（用户名@公司域名）
+  - 检查邮箱是否已被使用
+  - 更新用户 company_email 和 email_enabled 字段
+  - 记录操作日志到 hr_logs 表
+  - 预留外部邮件系统API调用
+
+- `generateEmailAddress(username)` - 生成邮箱地址
+  - 返回：username + @mochu.com
+
+- `generateUniqueCompanyEmail(username)` - 生成唯一邮箱地址
+  - 如果邮箱已存在，自动添加数字后缀
+  - 示例：zhangsan1@mochu.com, zhangsan2@mochu.com
+
+- `batchCreateCompanyEmail()` - 批量创建企业邮箱
+  - 为所有没有企业邮箱的活跃用户创建邮箱
+  - 用于历史数据迁移
+
+### 用户创建流程 (backend/routes/user.js)
+
+#### POST /api/users 创建用户：
+1. 参数验证（用户名、密码、姓名等）
+2. 检查用户名、手机号、邮箱是否重复
+3. 密码加密
+4. 插入用户记录到数据库
+5. **自动创建企业邮箱**：调用 `emailService.createCompanyEmail(newUserId, username)`
+6. 返回新创建的用户信息（包含 company_email）
+
+#### 代码示例：
+```javascript
+// 用户创建后自动创建企业邮箱
+const newUserId = result.lastInsertRowid;
+
+try {
+  emailService.createCompanyEmail(newUserId, username.trim());
+} catch (emailError) {
+  console.error('自动创建企业邮箱失败:', emailError);
+  // 不影响用户创建，仅记录日志
+}
+```
+
+### 配置项 (EMAIL_CONFIG)
+
+```javascript
+const EMAIL_CONFIG = {
+  // 企业邮箱域名
+  domain: '@mochu.com',
+  // 是否启用外部邮件系统API
+  enableExternalApi: false,
+  // 外部邮件系统API地址（预留）
+  externalApiUrl: process.env.EMAIL_API_URL || 'https://mail.mochu.com/api',
+  // 外部邮件系统API密钥（预留）
+  externalApiKey: process.env.EMAIL_API_KEY || '',
+  // 禁用后是否保留邮箱账号
+  retainOnDisable: true,
+  // 默认禁用原因
+  defaultDisableReason: '员工离职'
+};
+```
+
+### 日志记录
+
+#### hr_logs 表记录：
+- `user_id` - 用户ID
+- `action` - 操作类型：email_create
+- `details` - JSON格式详情（邮箱地址、用户名、消息）
+- `operator_id` - 操作人ID（自动创建时为null）
+- `created_at` - 创建时间
+
+### 功能特性
+
+#### 1. 自动创建
+- 用户创建成功后自动调用
+- 不影响用户创建主流程
+- 失败时仅记录日志，不阻塞用户创建
+
+#### 2. 邮箱唯一性检查
+- 创建前检查邮箱是否已被使用
+- 避免邮箱地址重复
+
+#### 3. 外部API预留
+- 支持对接企业邮件系统
+- 通过配置开关控制
+- API调用失败不影响本地记录
+
+#### 4. 批量创建支持
+- 提供批量创建接口
+- 用于历史数据迁移
+
+### 与其他功能的关系
+
+#### Task 15 企业邮箱禁用：
+- createCompanyEmail 创建邮箱
+- disableEmail 禁用邮箱（员工离职时）
+- enableEmail 重新启用邮箱
+
+#### Task 13 HR联动：
+- 用户创建时触发企业邮箱创建
+- 用户状态变更可能触发邮箱禁用
+
+### 导出函数
+
+```javascript
+module.exports = {
+  // 创建
+  createCompanyEmail,
+  generateUniqueCompanyEmail,
+  batchCreateCompanyEmail,
+  
+  // 禁用/启用
+  disableEmail,
+  enableEmail,
+  batchDisableEmail,
+  batchEnableEmail,
+  
+  // 查询
+  getEmailStatus,
+  getDisabledEmails,
+  
+  // 配置
+  getConfig,
+  updateConfig,
+  
+  // 工具函数
+  generateEmailAddress,
+  logEmailAction,
+  callExternalApi
+};
+```
+
+========================
+
+## Task 60 实现详情 (2026-03-07)
+
+### 功能概述
+实现系统管理 - 日志审计功能：记录用户操作日志，支持查询、统计分析和导出。
+
+### 数据库设计
+
+#### audit_logs 表（审计日志表）：
+- `id` - 主键
+- `user_id` - 用户ID
+- `username` - 用户名
+- `action` - 操作类型 (login/logout/create/update/delete/approve/reject/upload/download/export/import)
+- `module` - 模块名称 (auth/user/department/role/permission/project/contract/purchase/stock/finance/approval/change/construction/completion/report/system)
+- `target_type` - 目标类型
+- `target_id` - 目标ID
+- `detail` - 操作详情
+- `ip` - IP地址
+- `user_agent` - 用户代理
+- `created_at` - 创建时间
+
+#### 索引：
+- `idx_audit_logs_user` - 用户ID索引
+- `idx_audit_logs_action` - 操作类型索引
+- `idx_audit_logs_module` - 模块索引
+- `idx_audit_logs_created` - 创建时间索引
+- `idx_audit_logs_target` - 目标索引
+
+### 后端 API (backend/routes/audit.js)
+
+#### 审计日志 API：
+- `GET /api/audit/logs` - 获取日志列表
+  - 支持分页（page, pageSize）
+  - 支持筛选（user_id, username, action, module, start_date, end_date, keyword）
+- `GET /api/audit/logs/:id` - 获取日志详情
+- `GET /api/audit/logs/user/:userId` - 获取用户操作日志
+- `GET /api/audit/stats` - 获取日志统计
+  - 今日日志、本周日志、本月日志
+  - 登录次数
+  - 按操作类型统计
+  - 按模块统计
+  - 活跃用户 TOP 10
+  - 最近30天趋势
+- `GET /api/audit/action-types` - 获取操作类型列表
+- `GET /api/audit/modules` - 获取模块列表
+- `POST /api/audit/logs` - 记录审计日志（供其他模块调用）
+- `DELETE /api/audit/logs/clean` - 清理过期日志
+  - 参数：days（保留天数，默认180天）
+- `GET /api/audit/logs/export` - 导出审计日志
+  - 支持格式：csv、json
+  - 根据筛选条件导出
+
+### 后端服务 (backend/services/auditService.js)
+
+#### 核心方法：
+- `initAuditLogsTable()` - 初始化审计日志表
+- `log(logData)` - 记录审计日志
+- `getLogs(options)` - 查询审计日志（支持分页、筛选）
+- `getLogById(id)` - 获取日志详情
+- `getUserLogs(userId, options)` - 获取用户操作日志
+- `getStats(options)` - 获取日志统计
+- `getActionTypes()` - 获取操作类型列表
+- `getModules()` - 获取模块列表
+- `cleanOldLogs(daysToKeep)` - 清理过期日志
+
+### 前端组件
+- `frontend/src/pages/system/AuditLog.jsx` - 审计日志管理页面
+- `frontend/src/pages/system/AuditLog.css` - 样式文件
+
+### 功能特性
+
+#### 1. 统计卡片
+- 今日日志数
+- 本周日志数
+- 本月日志数
+- 登录次数
+- 新增操作数
+- 总日志数
+
+#### 2. 日志列表
+- 显示ID、时间、用户、操作类型、模块、目标类型、操作详情、IP地址
+- 支持搜索（用户名/详情关键词）
+- 支持按操作类型筛选
+- 支持按模块筛选
+- 支持时间范围筛选
+- 支持分页
+
+#### 3. 日志详情
+- 显示完整的日志信息
+- 包括用户代理信息
+
+#### 4. 统计分析
+- 按操作类型统计（含占比）
+- 按模块统计（含占比）
+- 活跃用户 TOP 10
+- 最近30天日志趋势
+
+#### 5. 导出功能
+- 支持导出为 CSV 格式（支持中文）
+- 支持导出为 JSON 格式
+- 根据当前筛选条件导出
+
+#### 6. 日志清理
+- 清理180天前日志
+- 清理90天前日志
+- 需确认操作
+
+### 操作类型配置
+| 类型 | 标签 | 颜色 |
+|------|------|------|
+| login | 登录 | 绿色 |
+| logout | 登出 | 橙色 |
+| create | 新增 | 蓝色 |
+| update | 编辑 | 青色 |
+| delete | 删除 | 红色 |
+| approve | 审批通过 | 绿色 |
+| reject | 审批拒绝 | 红色 |
+| upload | 上传 | 紫色 |
+| download | 下载 | 深蓝色 |
+| export | 导出 | 金色 |
+| import | 导入 | 青绿色 |
+
+### 模块配置
+| 模块 | 标签 |
+|------|------|
+| auth | 认证管理 |
+| user | 用户管理 |
+| department | 部门管理 |
+| role | 角色管理 |
+| permission | 权限管理 |
+| project | 项目管理 |
+| contract | 合同管理 |
+| purchase | 采购管理 |
+| stock | 库存管理 |
+| finance | 财务管理 |
+| approval | 审批管理 |
+| change | 变更管理 |
+| construction | 施工管理 |
+| completion | 竣工管理 |
+| report | 报表管理 |
+| system | 系统管理 |
+
+### 使用方式
+
+#### 在其他模块中记录日志：
+```javascript
+const auditService = require('../services/auditService');
+
+// 记录登录日志
+auditService.log({
+  user_id: user.id,
+  username: user.username,
+  action: 'login',
+  module: 'auth',
+  detail: '用户登录成功',
+  ip: req.ip,
+  user_agent: req.get('User-Agent')
+});
+
+// 记录创建操作
+auditService.log({
+  user_id: req.user.id,
+  username: req.user.username,
+  action: 'create',
+  module: 'project',
+  target_type: 'project',
+  target_id: projectId,
+  detail: `创建项目: ${projectName}`,
+  ip: req.ip
+});
+```
+
+### 页面路由
+- `/system/audit` - 审计日志管理页面
+
+========================
+
+## Task 54 实现详情 (2026-03-07)
+
+### 功能概述
+实现项目里程碑计划和跟踪功能：里程碑列表（关联项目）、新建里程碑、编辑功能、标记完成（记录实际完成日期）。
+
+### 数据库表（已存在）
+
+#### construction_milestones 表：
+- `id` - 主键
+- `milestone_no` - 里程碑编号（唯一）
+- `project_id` - 关联项目ID
+- `name` - 里程碑名称
+- `description` - 描述
+- `planned_date` - 计划日期
+- `actual_date` - 实际完成日期
+- `status` - 状态: pending/completed
+- `progress_rate` - 进度百分比
+- `remark` - 备注
+- `creator_id` - 创建人ID
+- `completed_by` - 完成人ID
+- `completed_at` - 完成时间
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 索引：
+- `idx_construction_milestones_no` - 里程碑编号索引
+- `idx_construction_milestones_project` - 项目索引
+- `idx_construction_milestones_status` - 状态索引
+- `idx_construction_milestones_planned_date` - 计划日期索引
+- `idx_construction_milestones_created` - 创建时间索引
+
+### 后端 API (backend/routes/construction.js)
+
+#### 里程碑管理 API：
+- `GET /api/construction/milestones` - 获取里程碑列表
+  - 支持按项目、状态筛选
+  - 支持关键词搜索
+  - 支持分页
+  - 自动计算偏差状态（正常/延期/提前/超期）
+- `GET /api/construction/milestones/:id` - 获取里程碑详情
+- `POST /api/construction/milestones` - 创建里程碑
+- `PUT /api/construction/milestones/:id` - 更新里程碑
+- `DELETE /api/construction/milestones/:id` - 删除里程碑
+- `POST /api/construction/milestones/:id/complete` - 标记完成
+  - 记录实际完成日期
+  - 自动计算偏差天数
+- `GET /api/construction/milestones/project/:projectId/timeline` - 获取项目里程碑时间线
+- `GET /api/construction/milestones/stats/overview` - 获取里程碑统计概览
+- `GET /api/construction/projects/active` - 获取活跃项目列表
+
+### 前端组件
+- `frontend/src/pages/construction/Milestone.jsx` - 里程碑管理页面
+
+### 功能特性
+
+#### 1. 统计卡片
+- 总里程碑数
+- 待完成数
+- 已完成数
+- 已超期数
+
+#### 2. 里程碑列表
+- 显示里程碑编号、名称、关联项目、计划日期、实际日期
+- 显示进度百分比（进度条）
+- 显示偏差状态（正常/延期/提前/超期）
+- 显示状态标签（待完成/已完成）
+- 支持按项目、状态筛选
+- 支持关键词搜索
+- 支持分页
+
+#### 3. 新建里程碑
+- 选择关联项目（必填）
+- 输入里程碑名称（必填）
+- 输入描述
+- 选择计划日期（必填）
+- 设置进度百分比（滑块）
+- 输入备注
+
+#### 4. 编辑里程碑
+- 仅待完成状态可编辑
+- 已完成的里程碑不允许修改
+
+#### 5. 标记完成
+- 填写实际完成日期（默认今天）
+- 设置完成进度百分比（默认100%）
+- 填写完成备注
+- 自动计算偏差天数
+
+#### 6. 查看详情
+- 显示完整里程碑信息
+- 显示偏差分析
+- 显示创建人和完成人信息
+
+#### 7. 删除里程碑
+- 仅待完成状态可删除
+- 已完成的里程碑不允许删除
+
+### 编号规则
+- 里程碑编号: MS + 年月(4位) + 序号(3位)
+- 例: 2026年3月第1个: MS2603001
+
+### 偏差计算
+
+#### 偏差天数计算：
+- 偏差天数 = 实际日期 - 计划日期
+- 正数：延期
+- 负数：提前
+- 零：正常
+
+#### 偏差状态：
+- normal：正常（已按计划完成）
+- delayed：延期（实际完成日期晚于计划日期）
+- advanced：提前（实际完成日期早于计划日期）
+- overdue：超期（计划日期已过但未完成）
+
+### 业务规则
+
+#### 创建里程碑：
+- 必须关联项目
+- 里程碑名称不能为空
+- 计划日期不能为空
+
+#### 编辑里程碑：
+- 只有待完成状态可以编辑
+- 已完成的里程碑不允许修改
+
+#### 完成里程碑：
+- 填写实际完成日期
+- 自动计算偏差天数和偏差状态
+- 状态变为 completed
+- 记录完成人和完成时间
+
+#### 删除里程碑：
+- 只有待完成状态可以删除
+- 已完成的里程碑不允许删除
+
+### 页面路由
+- `/construction/milestone` - 里程碑管理页面
+
+========================
+
+========================
+
+## Task 34 实现详情 (2026-03-07)
+
+### 功能概述
+实现超量采购申请功能：当采购超出采购清单时需要提交申请，经过预算员、财务、总经理三级审批。
+
+### 编号规则
+- 超量采购申请编号: OC + YYMMDD + 3位序号
+- 例: 2026年3月7日第1个: OC260307001
+- 每日重置序号
+
+### 数据库扩展
+
+#### 新建 overage_applications 表（超量采购申请主表）：
+- `id` - 主键
+- `apply_no` - 申请编号（唯一）
+- `project_id` - 关联项目ID（必填）
+- `purchase_list_id` - 关联采购清单ID（可选）
+- `item_name` - 物资名称（必填）
+- `specification` - 规格型号
+- `unit` - 单位
+- `original_quantity` - 原数量
+- `original_price` - 原单价
+- `actual_quantity` - 实际数量
+- `actual_price` - 实际单价
+- `overage_type` - 超量类型: quantity/amount/price
+- `overage_quantity` - 超量数量
+- `overage_amount` - 超量金额
+- `reason` - 超量原因（必填）
+- `remark` - 备注
+- `status` - 状态: pending/budget_approved/finance_approved/approved/rejected/cancelled
+- `creator_id` - 创建人ID
+- `approver_id` - 最终审批人ID
+- `approved_at` - 审批通过时间
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 新建 overage_application_approvals 表（审批记录表）：
+- `id` - 主键
+- `overage_application_id` - 关联申请ID
+- `step` - 审批步骤
+- `step_name` - 步骤名称
+- `role` - 审批角色（BUDGET/FINANCE/GM）
+- `approver_id` - 审批人ID
+- `action` - 动作: pending/approve/reject
+- `comment` - 审批意见
+- `created_at` - 创建时间
+- `updated_at` - 更新时间
+
+#### 索引：
+- `idx_overage_applications_no` - 申请编号索引
+- `idx_overage_applications_project` - 项目ID索引
+- `idx_overage_applications_status` - 状态索引
+- `idx_overage_applications_creator` - 创建人索引
+- `idx_overage_approvals_application` - 申请ID索引
+
+### 后端 API (backend/routes/purchase.js)
+
+#### 超量采购申请 API：
+- `GET /api/purchase/overage-apply` - 获取超量采购申请列表
+  - 支持按项目、状态、关键词筛选
+  - 支持分页
+- `GET /api/purchase/overage-apply/:id` - 获取申请详情
+  - 包含审批记录列表
+- `POST /api/purchase/overage-apply` - 创建超量采购申请
+  - 自动生成申请编号
+  - 自动计算超量数量和金额
+  - 自动创建三级审批流程
+- `PUT /api/purchase/overage-apply/:id` - 更新申请（仅待审批状态）
+- `DELETE /api/purchase/overage-apply/:id` - 删除申请（仅待审批或已拒绝状态）
+- `POST /api/purchase/overage-apply/:id/approve` - 审批通过
+- `POST /api/purchase/overage-apply/:id/reject` - 审批拒绝
+- `GET /api/purchase/overage-apply/pending` - 获取待审批列表
+- `GET /api/purchase/overage-apply/stats` - 获取统计数据
+- `GET /api/purchase/overage-apply/projects/:projectId/purchase-lists` - 获取项目采购清单
+- `GET /api/purchase/overage-apply/purchase-lists/:listId/items` - 获取采购清单物资明细
+
+### 前端组件
+- `frontend/src/pages/purchase/OverageApply.jsx` - 超量采购申请管理页面
+
+### 功能特性
+
+#### 1. 统计卡片
+- 总申请数
+- 待审批数（橙色高亮）
+- 预算员已审数（蓝色高亮）
+- 财务已审数（青色高亮）
+- 已通过数（绿色高亮）
+- 已拒绝数（红色高亮）
+
+#### 2. 申请列表
+- 显示申请编号、项目名称、物资名称、规格型号、超量类型
+- 显示超量数量、超量金额、状态、申请人、申请时间
+- 支持关键词搜索（编号/物资/项目）
+- 支持项目筛选
+- 支持状态筛选
+- 支持分页
+
+#### 3. 新建申请
+- 选择关联项目（必填）
+- 选择关联采购清单（可选）
+- 从采购清单选择物资（可选，自动填充信息）
+- 填写物资名称、规格、单位
+- 填写原采购清单信息（数量、单价）
+- 填写实际采购信息（数量、单价）
+- 选择超量类型（数量超量/金额超量/单价超量）
+- 填写超量原因（必填）
+- 显示审批流程提示
+
+#### 4. 编辑申请
+- 仅待审批状态可编辑
+- 只有创建人可编辑
+- 重新计算超量数量和金额
+
+#### 5. 申请详情
+- 显示完整的基本信息
+- 显示数量与金额对比（原 vs 实际 vs 超量）
+- 显示超量原因和备注
+- 显示审批记录时间线
+- 每个审批步骤显示：步骤名称、状态、审批人、意见、时间
+
+#### 6. 审批功能
+- 根据状态判断可审批角色
+- 审批通过：推进到下一审批步骤
+- 审批拒绝：要求填写拒绝原因，终止流程
+- 填写审批意见
+
+#### 7. 删除功能
+- 仅待审批或已拒绝状态可删除
+- 只有创建人可删除
+- 同时删除审批记录
+
+### 超量类型配置
+- 数量超量（quantity）- 橙色标签
+- 金额超量（amount）- 红色标签
+- 单价超量（price）- 紫色标签
+
+### 业务规则
+
+#### 创建申请：
+- 必须关联项目
+- 必须填写物资名称和超量原因
+- 自动计算：超量数量 = 实际数量 - 原数量
+- 自动计算：超量金额 = 实际金额 - 原金额
+- 创建后自动进入审批流程
+
+#### 审批流程：
+- 步骤1：预算员审批（BUDGET 角色）→ 状态变为 budget_approved
+- 步骤2：财务审批（FINANCE 角色）→ 状态变为 finance_approved
+- 步骤3：总经理审批（GM 角色）→ 状态变为 approved
+- 任一步骤拒绝，申请状态变为 rejected
+
+#### 状态说明：
+- pending：待审批（预算员待审）
+- budget_approved：预算员已审（财务待审）
+- finance_approved：财务已审（总经理待审）
+- approved：审批通过
+- rejected：已拒绝
+- cancelled：已取消
+
+#### 编辑规则：
+- 只有待审批状态可以编辑
+- 只有创建人可以编辑
+- 编辑后重新计算超量数据
+
+#### 删除规则：
+- 只有待审批或已拒绝状态可以删除
+- 只有创建人可以删除
+- 删除时同时删除审批记录
+
+### 权限控制
+- 创建申请：需要 purchase:create 权限
+- 编辑申请：仅待审批状态可编辑，需要 purchase:edit 权限
+- 删除申请：仅待审批或已拒绝状态可删除
+- 审批：需要 purchase:approve 权限，且角色需匹配当前审批步骤
+
+### 页面路由
+- `/purchase/overage-apply` - 超量采购申请管理页面
+
+### 菜单位置
+- 采购管理 -> 超量采购申请 (⚠️ 图标)
+
+### 数据计算
+
+#### 超量计算：
+- 超量数量 = 实际数量 - 原数量
+- 原金额 = 原数量 × 原单价
+- 实际金额 = 实际数量 × 实际单价
+- 超量金额 = 实际金额 - 原金额
+
+#### 统计计算：
+- 总申请数：所有记录数
+- 待审批数：status = 'pending' 的记录数
+- 预算员已审数：status = 'budget_approved' 的记录数
+- 财务已审数：status = 'finance_approved' 的记录数
+- 已通过数：status = 'approved' 的记录数
+- 已拒绝数：status = 'rejected' 的记录数
+

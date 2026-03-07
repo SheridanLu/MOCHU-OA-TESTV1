@@ -1,0 +1,105 @@
+/**
+ * 审计日志页面样式
+ * Task 60: 系统管理 - 日志审计
+ */
+
+.audit-log-page {
+  padding: 24px;
+  background-color: #f0f2f5;
+  min-height: calc(100vh - 64px);
+}
+
+.audit-log-page .ant-card {
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.audit-log-page .ant-statistic-title {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.audit-log-page .ant-statistic-content {
+  font-size: 28px;
+}
+
+.filter-section {
+  padding: 16px;
+  background-color: #fafafa;
+  border-radius: 4px;
+  border: 1px solid #e8e8e8;
+}
+
+.stats-content {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.stats-content .ant-card {
+  margin-bottom: 0;
+}
+
+.stats-content .ant-table-wrapper {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+/* 日志详情弹窗样式 */
+.ant-descriptions-bordered .ant-descriptions-item-label {
+  background-color: #fafafa;
+  font-weight: 500;
+}
+
+/* 表格行悬停效果 */
+.audit-log-page .ant-table-tbody > tr:hover > td {
+  background-color: #e6f7ff;
+}
+
+/* Tag 样式调整 */
+.audit-log-page .ant-tag {
+  border-radius: 4px;
+}
+
+/* 统计卡片悬停效果 */
+.audit-log-page .ant-col .ant-card {
+  transition: all 0.3s ease;
+}
+
+.audit-log-page .ant-col .ant-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 按钮组样式 */
+.audit-log-page .ant-space-item .ant-btn {
+  border-radius: 4px;
+}
+
+/* 分页器样式 */
+.audit-log-page .ant-pagination {
+  margin-top: 16px;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .audit-log-page .ant-col-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+}
+
+@media (max-width: 768px) {
+  .audit-log-page {
+    padding: 16px;
+  }
+
+  .audit-log-page .ant-col-4 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .audit-log-page .ant-col-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}

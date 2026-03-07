@@ -1,0 +1,284 @@
+/* 登录页面样式 */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景效果 */
+.login-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: -1;
+}
+
+.login-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 50% 100%, rgba(255, 255, 255, 0.1) 0%, transparent 50%);
+}
+
+.login-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* 登录卡片 */
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 16px;
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.3),
+    0 10px 20px rgba(0, 0, 0, 0.2);
+  padding: 40px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.98);
+}
+
+/* 头部 */
+.login-header {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.login-logo {
+  font-size: 48px;
+  margin-bottom: 12px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.login-title {
+  margin: 0 !important;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.login-subtitle {
+  display: block;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+/* 步骤指示器 */
+.login-steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 0;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #999;
+  transition: all 0.3s ease;
+}
+
+.step.active {
+  color: #667eea;
+}
+
+.step.done {
+  color: #52c41a;
+}
+
+.step-number {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  border: 2px solid currentColor;
+  background: #fff;
+  transition: all 0.3s ease;
+}
+
+.step.active .step-number {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-color: #667eea;
+  color: #fff;
+}
+
+.step.done .step-number {
+  background: #52c41a;
+  border-color: #52c41a;
+  color: #fff;
+}
+
+.step-text {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.step-line {
+  width: 60px;
+  height: 2px;
+  background: #e8e8e8;
+  margin: 0 16px;
+  border-radius: 1px;
+}
+
+.step-line.done {
+  background: #52c41a;
+}
+
+/* 表单样式 */
+.input-icon {
+  color: #999;
+  font-size: 16px;
+}
+
+.login-button {
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+  transition: all 0.3s ease;
+}
+
+.login-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+}
+
+.login-button:active {
+  transform: translateY(0);
+}
+
+/* 底部信息 */
+.login-footer {
+  text-align: center;
+  padding-top: 8px;
+}
+
+.footer-text {
+  display: block;
+  margin-bottom: 12px;
+  font-size: 13px;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-links a {
+  color: #667eea;
+  font-size: 13px;
+  transition: color 0.2s ease;
+}
+
+.footer-links a:hover {
+  color: #764ba2;
+}
+
+.footer-links .divider {
+  color: #ddd;
+}
+
+/* 版权信息 */
+.login-copyright {
+  position: absolute;
+  bottom: 20px;
+  text-align: center;
+  width: 100%;
+}
+
+.login-copyright span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+}
+
+/* 用户信息提示 */
+.user-info-hint {
+  text-align: center;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+/* 输入框样式优化 */
+.login-card .ant-input-affix-wrapper {
+  padding: 12px 16px;
+  border-radius: 8px;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.login-card .ant-input-affix-wrapper:hover {
+  border-color: #667eea;
+}
+
+.login-card .ant-input-affix-wrapper:focus,
+.login-card .ant-input-affix-wrapper-focused {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Tabs 样式 */
+.login-card .ant-tabs-nav {
+  margin-bottom: 24px;
+}
+
+.login-card .ant-tabs-tab {
+  font-size: 15px;
+}
+
+/* 响应式调整 */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 30px 24px;
+    margin: 10px;
+  }
+  
+  .login-logo {
+    font-size: 40px;
+  }
+  
+  .login-title {
+    font-size: 24px !important;
+  }
+  
+  .step-line {
+    width: 40px;
+    margin: 0 10px;
+  }
+}

@@ -1,0 +1,209 @@
+/* 通讯录页面样式 */
+.directory-container {
+  padding: 24px;
+  min-height: 100vh;
+  background: #f0f2f5;
+}
+
+.directory-card {
+  border-radius: 8px;
+}
+
+.directory-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.directory-header h4 {
+  margin: 0;
+}
+
+.filter-section {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+/* 卡片视图 */
+.directory-card-container {
+  min-height: 300px;
+}
+
+.department-section {
+  margin-bottom: 32px;
+}
+
+.department-header {
+  font-size: 16px;
+  font-weight: 500;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.department-count {
+  font-size: 14px;
+  font-weight: normal;
+  opacity: 0.9;
+  margin-left: auto;
+}
+
+/* 联系人卡片 */
+.contact-card {
+  text-align: center;
+  border-radius: 8px;
+  transition: all 0.3s;
+  height: 100%;
+}
+
+.contact-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.contact-avatar {
+  padding: 16px 0;
+}
+
+.contact-info {
+  padding: 0 12px 12px;
+}
+
+.contact-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.contact-position {
+  font-size: 12px;
+  color: #1890ff;
+  margin-bottom: 4px;
+}
+
+.contact-department {
+  font-size: 12px;
+  color: #999;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contact-actions {
+  border-top: 1px solid #f0f0f0;
+  padding: 8px 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* 列表视图 */
+.directory-list-container {
+  min-height: 300px;
+}
+
+.contact-list-item {
+  cursor: pointer;
+  padding: 16px;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.contact-list-item:hover {
+  background-color: #f5f5f5;
+}
+
+/* 页脚统计 */
+.directory-footer {
+  text-align: center;
+  padding: 16px 0;
+  margin-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+/* 详情弹窗 */
+.contact-detail {
+  text-align: center;
+}
+
+.contact-detail-avatar {
+  margin-bottom: 16px;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .directory-container {
+    padding: 12px;
+  }
+
+  .directory-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .filter-section {
+    padding: 12px;
+  }
+
+  .contact-card {
+    margin-bottom: 0;
+  }
+
+  .contact-list-item {
+    padding: 12px;
+  }
+}
+
+/* 空状态 */
+.ant-empty {
+  padding: 60px 0;
+}
+
+/* 搜索框优化 */
+.filter-section .ant-input-affix-wrapper,
+.filter-section .ant-select {
+  border-radius: 6px;
+}
+
+.filter-section .ant-btn {
+  border-radius: 6px;
+}
+
+/* 按钮组优化 */
+.directory-header .ant-space-item .ant-btn {
+  border-radius: 6px;
+}
+
+/* 列表项分隔线优化 */
+.department-section .ant-list-item {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.department-section .ant-list-item:last-child {
+  border-bottom: none;
+}
+
+/* 详情弹窗描述列表优化 */
+.contact-detail .ant-descriptions-item-label {
+  font-weight: 500;
+}
+
+.contact-detail .ant-descriptions-item-content a {
+  color: #1890ff;
+}
+
+.contact-detail .ant-descriptions-item-content a:hover {
+  text-decoration: underline;
+}

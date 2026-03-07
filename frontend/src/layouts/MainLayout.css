@@ -1,0 +1,158 @@
+.main-layout {
+  min-height: 100vh;
+}
+
+.sider {
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.sider .logo {
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.sider .logo-mini {
+  font-size: 24px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.sider .logo-text {
+  font-size: 18px;
+  font-weight: bold;
+  color: #fff;
+  white-space: nowrap;
+}
+
+/* 侧边栏菜单样式 */
+.sider .ant-menu {
+  border-right: none;
+}
+
+.sider .ant-menu-item,
+.sider .ant-menu-submenu-title {
+  margin: 4px 8px;
+  border-radius: 8px;
+}
+
+.sider .ant-menu-item-selected {
+  background: linear-gradient(90deg, #1890ff 0%, #096dd9 100%) !important;
+}
+
+.layout-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  z-index: 9;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+}
+
+.collapse-btn {
+  font-size: 18px;
+  padding: 0 12px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.notification-btn {
+  font-size: 18px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.user-info:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.user-avatar {
+  background-color: #1890ff;
+}
+
+.user-name {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.85);
+}
+
+.down-icon {
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.content {
+  margin: 16px;
+  padding: 24px;
+  min-height: calc(100vh - 64px - 32px);
+  overflow: auto;
+}
+
+.breadcrumb {
+  margin-bottom: 16px;
+}
+
+.content-wrapper {
+  min-height: calc(100% - 32px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .header {
+    padding: 0 12px;
+  }
+
+  .user-name {
+    display: none;
+  }
+
+  .content {
+    margin: 8px;
+    padding: 16px;
+  }
+}
+
+/* 暗色主题适配 */
+@media (prefers-color-scheme: dark) {
+  .header {
+    background: #141414 !important;
+  }
+
+  .user-name {
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .down-icon {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  .user-info:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+}
