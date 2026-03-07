@@ -127,8 +127,10 @@ function checkPermission(permission) {
     }
 
     const userPermissions = getUserPermissions(req.user.id);
+    console.log('checkPermission - userId:', req.user.id, 'permissions:', userPermissions, 'required:', permission);
     
     if (!hasPermission(userPermissions, permission)) {
+      console.log('权限检查失败');
       return res.status(403).json({
         success: false,
         message: '无权限执行此操作',
@@ -136,6 +138,7 @@ function checkPermission(permission) {
       });
     }
 
+    console.log('权限检查通过');
     // 将权限列表附加到 req 对象，供后续使用
     req.userPermissions = userPermissions;
     next();

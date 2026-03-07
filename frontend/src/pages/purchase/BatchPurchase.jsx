@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import './BatchPurchase.css';
 
 // API 基础路径
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 状态映射
 const STATUS_MAP = {

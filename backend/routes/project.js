@@ -691,19 +691,27 @@ router.delete('/:id', authMiddleware, checkPermission('project:delete'), (req, r
     });
   }
   
-  // 只允许删除虚拟项目
-  if (project.type !== 'virtual') {
-    return res.status(403).json({
-      success: false,
-      message: '实体项目不能直接删除'
-    });
-  }
-  
-  // 已转换的虚拟项目不能删除
-  if (project.converted_to) {
+  // 虚拟项目：已转换的不能删除
+  if (project.type === 'virtual' && project.converted_to) {
     return res.status(403).json({
       success: false,
       message: '已转换的虚拟项目不能删除'
+    });
+  }
+  
+  // 实体项目：只有 pending 状态可以删除
+  if (project.type === 'entity' && project.status !== 'pending') {
+    return res.status(403).json({
+      success: false,
+      message: '只有待审批状态的实体项目可以删除'
+    });
+  }
+  
+  // 非待审批状态的虚拟项目不能删除
+  if (project.type === 'virtual' && !['pending', 'approval_rejected'].includes(project.status)) {
+    return res.status(403).json({
+      success: false,
+      message: '当前状态的虚拟项目不能删除'
     });
   }
   

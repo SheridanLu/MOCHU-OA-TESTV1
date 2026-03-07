@@ -76,10 +76,10 @@ function authMiddleware(req, res, next) {
     });
   }
 
-  // 将用户信息挂载到 req.user（注意：这里使用 id 而不是 userId）
+  // 将用户信息挂载到 req.user（兼容 id 和 userId）
   req.user = {
-    id: decoded.userId,
-    userId: decoded.userId,
+    id: decoded.userId || decoded.id,
+    userId: decoded.userId || decoded.id,
     username: decoded.username,
     role: decoded.role
   };

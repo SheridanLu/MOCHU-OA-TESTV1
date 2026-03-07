@@ -43,7 +43,7 @@ import {
 import dayjs from 'dayjs';
 
 // API 基础地址
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 获取请求头
 function getAuthHeaders() {
@@ -124,7 +124,9 @@ function ProjectList() {
       });
       const result = await response.json();
       if (result.success) {
-        setUsers(result.data.list || []);
+        // 后端返回的 data 可能是数组或 {list, total} 格式
+        const userData = Array.isArray(result.data) ? result.data : (result.data.list || []);
+        setUsers(userData);
       }
     } catch (error) {
       console.error('加载用户列表失败:', error);

@@ -12,7 +12,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './StockIn.css';
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 获取请求头
 const getHeaders = () => {

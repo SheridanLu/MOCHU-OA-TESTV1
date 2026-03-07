@@ -12,7 +12,7 @@
 import React, { useState, useEffect } from 'react';
 import './StockIn.css'; // 复用入库页面的样式
 
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 获取请求头
 const getHeaders = () => {

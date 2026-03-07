@@ -30,7 +30,7 @@ import { useNavigate } from 'react-router-dom';
 const { TextArea } = Input;
 
 // API 基础地址
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 获取请求头
 function getAuthHeaders() {

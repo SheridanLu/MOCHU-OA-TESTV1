@@ -26,7 +26,7 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 // API 基础地址
-const API_BASE = 'http://localhost:3001/api';
+const API_BASE = '/api';
 
 // 获取请求头
 function getAuthHeaders() {
@@ -85,6 +85,7 @@ function ProjectCreate() {
 
   // 提交表单
   const handleSubmit = async (values) => {
+    console.log('开始提交项目:', values);
     setLoading(true);
     try {
       // 处理日期
@@ -99,6 +100,8 @@ function ProjectCreate() {
         end_date: end_date ? end_date.format('YYYY-MM-DD') : null
       };
 
+      console.log('提交数据:', submitData);
+      
       const response = await fetch(`${API_BASE}/projects`, {
         method: 'POST',
         headers: getAuthHeaders(),
@@ -106,17 +109,20 @@ function ProjectCreate() {
       });
 
       const result = await response.json();
+      console.log('响应结果:', result);
 
       if (result.success) {
         message.success(`项目创建成功！项目编号：${result.data.project_no}`);
         // 跳转到项目列表
-        navigate('/project/list');
+        setTimeout(() => {
+          navigate('/project/list');
+        }, 500);
       } else {
         message.error(result.message || '创建失败');
       }
     } catch (error) {
       console.error('创建项目失败:', error);
-      message.error('创建项目失败');
+      message.error('创建项目失败: ' + error.message);
     } finally {
       setLoading(false);
     }
