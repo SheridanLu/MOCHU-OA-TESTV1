@@ -310,66 +310,54 @@ function UserManage() {
 
   // 重置密码
   const handleResetPassword = (record) => {
-    Modal.confirm({
-      title: '重置密码',
-      icon: <ExclamationCircleOutlined />,
-      content: (
-        <div>
-          <p>确定要重置用户 <Text strong>{record.real_name}</Text> 的密码吗？</p>
-          <p>密码将被重置为：<Text code>123456</Text></p>
-        </div>
-      ),
-      okText: '确定',
-      cancelText: '取消',
-      onOk: async () => {
-        try {
-          const response = await api.put(`/users/${record.id}`, { password: '123456' });
-          if (response.data.success) {
-            message.success('密码已重置为 123456');
-          } else {
-            message.error(response.data.message || '重置密码失败');
-          }
-        } catch (error) {
-          console.error('重置密码失败:', error);
-          message.error(error.response?.data?.message || '重置密码失败');
-        }
-      },
-    });
+    console.log('handleResetPassword called:', record);
+    if (window.confirm(`确定要重置用户 ${record.real_name} 的密码吗？密码将被重置为：123456`)) {
+      doResetPassword(record.id);
+    }
+  };
+
+  const doResetPassword = async (userId) => {
+    console.log('doResetPassword called, id:', userId);
+    try {
+      const response = await api.put(`/users/${userId}`, { password: '123456' });
+      console.log('Reset password response:', response);
+      if (response.data.success) {
+        message.success('密码已重置为 123456');
+      } else {
+        message.error(response.data.message || '重置密码失败');
+      }
+    } catch (error) {
+      console.error('重置密码失败:', error);
+      message.error(error.response?.data?.message || '重置密码失败');
+    }
   };
 
   // 删除确认
   const handleDeleteConfirm = (record) => {
     console.log('handleDeleteConfirm called:', record);
-    Modal.confirm({
-      getContainer: () => document.body,
-      title: '确认删除',
-      icon: <ExclamationCircleOutlined />,
-      content: (
-        <div>
-          <p>确定要删除用户 <Text strong>{record.real_name}</Text> 吗？</p>
-          <p><Text type="secondary">此操作为软删除，用户数据仍会保留。</Text></p>
-        </div>
-      ),
-      okText: '确定',
-      okType: 'danger',
-      cancelText: '取消',
-      onOk: async () => {
-        console.log('Delete onOk called, user id:', record.id);
-        try {
-          const response = await api.delete(`/users/${record.id}`);
-          console.log('Delete response:', response);
-          if (response.data.success) {
-            message.success('用户删除成功');
-            fetchUsers();
-          } else {
-            message.error(response.data.message || '删除用户失败');
-          }
-        } catch (error) {
-          console.error('删除用户失败:', error);
-          message.error(error.response?.data?.message || '删除用户失败');
-        }
-      },
-    });
+    
+    // 使用 window.confirm 作为备选方案
+    if (window.confirm(`确定要删除用户 ${record.real_name} 吗？此操作为软删除，用户数据仍会保留。`)) {
+      handleDelete(record.id);
+    }
+  };
+
+  // 删除用户
+  const handleDelete = async (id) => {
+    console.log('handleDelete called, id:', id);
+    try {
+      const response = await api.delete(`/users/${id}`);
+      console.log('Delete response:', response);
+      if (response.data.success) {
+        message.success('用户删除成功');
+        fetchUsers();
+      } else {
+        message.error(response.data.message || '删除用户失败');
+      }
+    } catch (error) {
+      console.error('删除用户失败:', error);
+      message.error(error.response?.data?.message || '删除用户失败');
+    }
   };
 
   // 提交表单
