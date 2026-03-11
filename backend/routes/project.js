@@ -196,15 +196,18 @@ router.post('/', authMiddleware, checkPermission('project:create'), (req, res) =
   // 生成项目编号
   const projectNo = getProjectNo('entity');
   
+  // 项目类型（智能化项目、消防项目、EPC项目）
+  const { project_type } = req.body;
+  
   try {
     const result = db.prepare(`
       INSERT INTO projects (
         project_no, name, type, customer, contract_amount,
-        manager_id, start_date, end_date, status
-      ) VALUES (?, ?, 'entity', ?, ?, ?, ?, ?, 'pending')
+        manager_id, start_date, end_date, status, project_type
+      ) VALUES (?, ?, 'entity', ?, ?, ?, ?, ?, 'pending', ?)
     `).run(
       projectNo, name, customer, contract_amount || 0,
-      manager_id, start_date, end_date
+      manager_id, start_date, end_date, project_type || '智能化项目'
     );
     
     const newProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
@@ -255,15 +258,18 @@ router.post('/virtual', authMiddleware, checkPermission('project:create'), (req,
   // 生成虚拟项目编号
   const projectNo = getProjectNo('virtual');
   
+  // 项目类型
+  const { project_type } = req.body;
+  
   try {
     const result = db.prepare(`
       INSERT INTO projects (
         project_no, name, type, customer, contract_amount,
-        manager_id, start_date, end_date, status, virtual_from
-      ) VALUES (?, ?, 'virtual', ?, ?, ?, ?, ?, 'tracking', ?)
+        manager_id, start_date, end_date, status, virtual_from, project_type
+      ) VALUES (?, ?, 'virtual', ?, ?, ?, ?, ?, 'tracking', ?, ?)
     `).run(
       projectNo, name, customer, estimated_amount || 0,
-      manager_id, start_date, end_date, virtual_from || null
+      manager_id, start_date, end_date, virtual_from || null, project_type || '智能化项目'
     );
     
     const newProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
@@ -316,6 +322,9 @@ router.put('/:id', authMiddleware, checkPermission('project:edit'), (req, res) =
     });
   }
   
+  // 获取项目类型
+  const { project_type } = req.body;
+  
   try {
     db.prepare(`
       UPDATE projects SET
@@ -326,11 +335,12 @@ router.put('/:id', authMiddleware, checkPermission('project:edit'), (req, res) =
         start_date = COALESCE(?, start_date),
         end_date = COALESCE(?, end_date),
         status = COALESCE(?, status),
+        project_type = COALESCE(?, project_type),
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
       name, customer, contract_amount, manager_id,
-      start_date, end_date, status, id
+      start_date, end_date, status, project_type, id
     );
     
     const updatedProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);

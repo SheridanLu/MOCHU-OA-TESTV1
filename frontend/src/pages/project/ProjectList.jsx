@@ -492,6 +492,17 @@ function ProjectList() {
       )
     },
     {
+      title: '项目类型',
+      dataIndex: 'project_type',
+      key: 'project_type',
+      width: 100,
+      render: (text) => (
+        <Tag color={text === '智能化项目' ? 'blue' : text === '消防项目' ? 'orange' : 'purple'}>
+          {text || '智能化项目'}
+        </Tag>
+      )
+    },
+    {
       title: '客户',
       dataIndex: 'customer',
       key: 'customer',

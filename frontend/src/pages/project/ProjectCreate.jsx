@@ -203,6 +203,22 @@ function ProjectCreate() {
             </Col>
             <Col xs={24} sm={12} md={8}>
               <Form.Item
+                name="project_type"
+                label="项目类型"
+                initialValue="智能化项目"
+              >
+                <Select placeholder="请选择项目类型">
+                  <Select.Option value="智能化项目">智能化项目</Select.Option>
+                  <Select.Option value="消防项目">消防项目</Select.Option>
+                  <Select.Option value="EPC项目">EPC项目</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col xs={24} sm={12} md={8}>
+              <Form.Item
                 name="contract_amount"
                 label="合同金额（元）"
                 rules={[
