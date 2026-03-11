@@ -3,6 +3,7 @@
   "version": "V4",
   "description": "MOCHU OA 办公自动化系统 - 模块重组版",
   "created": "2026-03-11",
+  "completed": "2026-03-11T11:32:00+08:00",
   "workflow": {
     "init": "bash init.sh",
     "claim_task": "从tasks数组中选择第一个status=pending的任务",
@@ -34,7 +35,7 @@
       "depends_on": [1],
       "assigned": "claude",
       "started_at": "2026-03-11T11:02:00+08:00",
-      "completed_at": "2026-03-11T11:15:00+08:00",
+      "completed_at": "2026-03-11T11:10:00+08:00",
       "error": null
     },
     {
@@ -94,11 +95,11 @@
       "description": "验证登录、导航、各模块页面可正常访问",
       "category": "测试",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [1, 2, 5, 6],
-      "assigned": null,
-      "started_at": null,
-      "completed_at": null,
+      "assigned": "claude",
+      "started_at": "2026-03-11T11:18:00+08:00",
+      "completed_at": "2026-03-11T11:26:00+08:00",
       "error": null
     },
     {
@@ -107,19 +108,19 @@
       "description": "删除迁移后不再需要的旧文件和目录",
       "category": "清理",
       "priority": "low",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [7],
-      "assigned": null,
-      "started_at": null,
-      "completed_at": null,
+      "assigned": "claude",
+      "started_at": "2026-03-11T11:26:00+08:00",
+      "completed_at": "2026-03-11T11:26:30+08:00",
       "error": null
     }
   ],
   "statistics": {
     "total": 8,
-    "pending": 2,
+    "pending": 0,
     "in_progress": 0,
-    "completed": 6,
+    "completed": 8,
     "failed": 0
   }
 }
