@@ -22,6 +22,44 @@ const requirePermission = (permission) => {
 };
 
 /**
+ * GET /api/projects/cost-targets
+ * 获取成本下挂目标列表（实体项目+部门）
+ * 注意：此路由必须在 /:id 之前定义，否则会被当作项目ID
+ */
+router.get('/cost-targets', authMiddleware, (req, res) => {
+  try {
+    // 获取所有进行中的实体项目
+    const entityProjects = db.prepare(`
+      SELECT id, project_no, name, 'entity' as type
+      FROM projects 
+      WHERE type = 'entity' AND status IN ('pending', 'in_progress')
+      ORDER BY created_at DESC
+    `).all();
+    
+    // 获取所有部门
+    const departments = db.prepare(`
+      SELECT id, name, 'department' as type
+      FROM departments
+      ORDER BY name
+    `).all();
+    
+    res.json({
+      success: true,
+      data: {
+        entityProjects,
+        departments
+      }
+    });
+  } catch (error) {
+    console.error('获取成本目标列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取成本目标列表失败'
+    });
+  }
+});
+
+/**
  * GET /api/projects/preview-no
  * 预览下一个项目编号（不实际占用）
  * 查询参数: type=entity|virtual
@@ -1463,44 +1501,6 @@ router.get('/:id/abort-status', authMiddleware, (req, res) => {
       costTargetName
     }
   });
-});
-
-/**
- * GET /api/projects/cost-targets
- * 获取成本下挂目标列表（实体项目+部门）
- */
-router.get('/cost-targets', authMiddleware, (req, res) => {
-  try {
-    // 获取所有进行中的实体项目
-    const entityProjects = db.prepare(`
-      SELECT id, project_no, name, 'entity' as type
-      FROM projects 
-      WHERE type = 'entity' AND status IN ('pending', 'in_progress')
-      ORDER BY created_at DESC
-    `).all();
-    
-    // 获取所有部门
-    const departments = db.prepare(`
-      SELECT id, name, 'department' as type
-      FROM departments
-      WHERE status = 1
-      ORDER BY name
-    `).all();
-    
-    res.json({
-      success: true,
-      data: {
-        entityProjects,
-        departments
-      }
-    });
-  } catch (error) {
-    console.error('获取成本目标列表失败:', error);
-    res.status(500).json({
-      success: false,
-      message: '获取成本目标列表失败'
-    });
-  }
 });
 
 module.exports = router;
