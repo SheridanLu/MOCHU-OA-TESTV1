@@ -1,126 +1,39 @@
 {
   "project": "MOCHU-OA",
-  "version": "V4",
-  "description": "MOCHU OA 办公自动化系统 - 模块重组版",
+  "version": "V4.1",
+  "description": "MOCHU OA 办公自动化系统 - 功能增强版",
   "created": "2026-03-11",
-  "completed": "2026-03-11T11:32:00+08:00",
-  "workflow": {
-    "init": "bash init.sh",
-    "claim_task": "从tasks数组中选择第一个status=pending的任务",
-    "develop": "按CLAUDE.md规范开发",
-    "verify": "测试验证功能",
-    "update": "更新task.json和progress.txt",
-    "commit": "git commit并push"
-  },
+  "completed": "2026-03-11T12:00:00+08:00",
   "tasks": [
     {
-      "id": 1,
-      "title": "模块重组 - 创建新的目录结构",
-      "description": "按照方案一重新组织前端页面目录结构",
-      "category": "重构",
-      "priority": "high",
-      "status": "completed",
-      "assigned": "claude",
-      "started_at": "2026-03-11T10:50:00+08:00",
-      "completed_at": "2026-03-11T11:02:00+08:00",
-      "error": null
+      "id": 9,
+      "title": "付款管理 - 付款列表页面",
+      "description": "创建付款管理页面，展示待付款、已付款列表",
+      "status": "completed"
     },
     {
-      "id": 2,
-      "title": "模块重组 - 更新路由配置",
-      "description": "修改App.jsx中的路由，适配新目录结构",
-      "category": "重构",
-      "priority": "high",
-      "status": "completed",
-      "depends_on": [1],
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:02:00+08:00",
-      "completed_at": "2026-03-11T11:10:00+08:00",
-      "error": null
+      "id": 10,
+      "title": "财务统计 - 饼图可视化",
+      "description": "创建财务统计页面，使用ECharts展示收入/支出饼图",
+      "status": "completed"
     },
     {
-      "id": 3,
-      "title": "命名统一 - 零星采购模块",
-      "description": "将zeroPurchase重命名为sporadicPurchase，统一命名",
-      "category": "重构",
-      "priority": "medium",
-      "status": "completed",
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:12:00+08:00",
-      "completed_at": "2026-03-11T11:14:00+08:00",
-      "error": null
+      "id": 11,
+      "title": "项目进度 - 跟踪列表",
+      "description": "创建项目进度跟踪页面，展示项目里程碑进度",
+      "status": "completed"
     },
     {
-      "id": 4,
-      "title": "模块合并 - 财务模块",
-      "description": "合并finance和cost目录为统一的财务管理模块",
-      "category": "重构",
-      "priority": "medium",
-      "status": "completed",
-      "depends_on": [1],
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:14:00+08:00",
-      "completed_at": "2026-03-11T11:18:00+08:00",
-      "error": null
-    },
-    {
-      "id": 5,
-      "title": "新建首页 - 业务导航",
-      "description": "创建新的首页，展示业务流程导航和快捷入口",
-      "category": "新功能",
-      "priority": "high",
-      "status": "completed",
-      "depends_on": [1, 2],
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:02:00+08:00",
-      "completed_at": "2026-03-11T11:10:00+08:00",
-      "error": null
-    },
-    {
-      "id": 6,
-      "title": "菜单重构 - 侧边栏导航",
-      "description": "按照新模块结构重构侧边栏菜单",
-      "category": "重构",
-      "priority": "high",
-      "status": "completed",
-      "depends_on": [5],
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:02:00+08:00",
-      "completed_at": "2026-03-11T11:10:00+08:00",
-      "error": null
-    },
-    {
-      "id": 7,
-      "title": "测试验证 - 基础功能",
-      "description": "验证登录、导航、各模块页面可正常访问",
-      "category": "测试",
-      "priority": "high",
-      "status": "completed",
-      "depends_on": [1, 2, 5, 6],
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:18:00+08:00",
-      "completed_at": "2026-03-11T11:26:00+08:00",
-      "error": null
-    },
-    {
-      "id": 8,
-      "title": "清理冗余 - 删除旧文件",
-      "description": "删除迁移后不再需要的旧文件和目录",
-      "category": "清理",
-      "priority": "low",
-      "status": "completed",
-      "depends_on": [7],
-      "assigned": "claude",
-      "started_at": "2026-03-11T11:26:00+08:00",
-      "completed_at": "2026-03-11T11:26:30+08:00",
-      "error": null
+      "id": 12,
+      "title": "通知公告 - 公告列表",
+      "description": "创建通知公告页面，展示系统公告",
+      "status": "completed"
     }
   ],
   "statistics": {
-    "total": 8,
-    "pending": 0,
+    "total": 4,
+    "completed": 4,
     "in_progress": 0,
-    "completed": 8,
-    "failed": 0
+    "pending": 0
   }
 }

@@ -12,6 +12,7 @@ import UserManage from './pages/system/UserManage';
 import RoleManage from './pages/system/RoleManage';
 import PermissionManage from './pages/system/PermissionManage';
 import AuditLog from './pages/system/AuditLog';
+import AnnouncementList from './pages/system/AnnouncementList';
 
 // 通讯录
 import Directory from './pages/directory/Directory';
@@ -21,6 +22,7 @@ import ProjectList from './pages/project/ProjectList';
 import ProjectCreate from './pages/project/ProjectCreate';
 import ProjectDetail from './pages/project/ProjectDetail';
 import VirtualProjectCreate from './pages/project/VirtualProjectCreate';
+import ProjectProgress from './pages/project/ProjectProgress';
 import ApprovalList from './pages/approval/ApprovalList';
 
 // 合同管理模块
@@ -50,6 +52,8 @@ import IncomeStatement from './pages/finance/IncomeStatement';
 import LaborPayment from './pages/finance/LaborPayment';
 import MaterialPayment from './pages/finance/MaterialPayment';
 import CostReport from './pages/report/CostReport';
+import PaymentList from './pages/finance/PaymentList';
+import FinanceChart from './pages/finance/FinanceChart';
 
 // 施工管理模块
 import Milestone from './pages/construction/Milestone';
@@ -76,6 +80,8 @@ const menuConfig = [
       { key: 'users', name: '用户管理', path: '/system/users' },
       { key: 'roles', name: '角色管理', path: '/system/roles' },
       { key: 'permissions', name: '权限分配', path: '/system/permissions' },
+      { key: 'announcements', name: '通知公告', path: '/system/announcements' },
+      { key: 'announcements', name: '通知公告', path: '/system/announcements' },
       { key: 'audit', name: '操作日志', path: '/system/audit' },
     ]
   },
@@ -85,6 +91,7 @@ const menuConfig = [
     icon: '📁',
     children: [
       { key: 'list', name: '项目列表', path: '/project/list' },
+      { key: 'progress', name: '项目进度', path: '/project/progress' },
       { key: 'create', name: '项目立项', path: '/project/create' },
       { key: 'virtual', name: '虚拟项目', path: '/project/virtual-create' },
       { key: 'approval', name: '审批管理', path: '/project/approval' },
@@ -130,7 +137,9 @@ const menuConfig = [
     name: '财务管理',
     icon: '💰',
     children: [
+      { key: 'chart', name: '财务统计', path: '/finance/chart' },
       { key: 'statement', name: '收入对账单', path: '/finance/income-statement' },
+      { key: 'payments', name: '付款管理', path: '/finance/payments' },
       { key: 'labor', name: '人工费付款', path: '/finance/labor-payment' },
       { key: 'material', name: '材料款付款', path: '/finance/material-payment' },
       { key: 'report', name: '成本报表', path: '/finance/cost-report' },
@@ -372,6 +381,9 @@ function App() {
         <Route path="/system/permissions" element={
           <ProtectedRoute><MainLayout><PermissionManage /></MainLayout></ProtectedRoute>
         } />
+        <Route path="/system/announcements" element={
+          <ProtectedRoute><MainLayout><AnnouncementList /></MainLayout></ProtectedRoute>
+        } />
         <Route path="/system/audit" element={
           <ProtectedRoute><MainLayout><AuditLog /></MainLayout></ProtectedRoute>
         } />
@@ -384,6 +396,9 @@ function App() {
         {/* 项目管理 */}
         <Route path="/project/list" element={
           <ProtectedRoute><MainLayout><ProjectList /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/project/progress" element={
+          <ProtectedRoute><MainLayout><ProjectProgress /></MainLayout></ProtectedRoute>
         } />
         <Route path="/project/create" element={
           <ProtectedRoute><MainLayout><ProjectCreate /></MainLayout></ProtectedRoute>
@@ -453,8 +468,17 @@ function App() {
         } />
 
         {/* 财务管理 */}
+        <Route path="/finance/chart" element={
+          <ProtectedRoute><MainLayout><FinanceChart /></MainLayout></ProtectedRoute>
+        } />
         <Route path="/finance/income-statement" element={
           <ProtectedRoute><MainLayout><IncomeStatement /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/finance/payments" element={
+          <ProtectedRoute><MainLayout><PaymentList /></MainLayout></ProtectedRoute>
+        } />
+        <Route path="/finance/payments" element={
+          <ProtectedRoute><MainLayout><PaymentList /></MainLayout></ProtectedRoute>
         } />
         <Route path="/finance/labor-payment" element={
           <ProtectedRoute><MainLayout><LaborPayment /></MainLayout></ProtectedRoute>
