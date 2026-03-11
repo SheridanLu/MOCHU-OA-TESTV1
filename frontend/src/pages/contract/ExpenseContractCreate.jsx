@@ -82,12 +82,17 @@ function ExpenseContractCreate() {
   // 加载项目列表（仅实体项目）
   const loadProjects = useCallback(async () => {
     try {
+      // 获取所有实体项目（不过滤status，前端过滤无效状态）
       const response = await fetch(`${API_BASE}/projects?type=entity&pageSize=100`, {
         headers: getAuthHeaders()
       });
       const result = await response.json();
       if (result.success) {
-        setProjects(result.data || []);
+        // 过滤掉已中止和已转换的项目
+        const activeProjects = (result.data || []).filter(p => 
+          p.status !== 'aborted' && p.status !== 'converted'
+        );
+        setProjects(activeProjects);
       }
     } catch (error) {
       console.error('加载项目列表失败:', error);
@@ -226,10 +231,13 @@ function ExpenseContractCreate() {
       key: Date.now(),
       material_name: '',
       specification: '',
+      device_params: '',  // 设备参数
       unit: '',
       quantity: 1,
       unit_price: 0,
-      total_price: 0
+      total_price: 0,
+      invoice_type: '普票',  // 税票类型：普票/专票
+      tax_rate: 13          // 税点：1/3/6/9/13%
     };
     handleItemsChange([...contractItems, newItem]);
   };
@@ -439,22 +447,45 @@ function ExpenseContractCreate() {
       )
     }]),
     {
+      title: '设备参数',
+      dataIndex: 'device_params',
+      width: 120,
+      render: (value, record) => (
+        <Input
+          value={value}
+          onChange={(e) => updateItem(record.key, 'device_params', e.target.value)}
+          placeholder="设备参数"
+        />
+      )
+    },
+    {
       title: '单位',
       dataIndex: 'unit',
       width: 80,
       render: (value, record) => (
-        <Input
+        <Select
           value={value}
-          onChange={(e) => updateItem(record.key, 'unit', e.target.value)}
+          onChange={(val) => updateItem(record.key, 'unit', val)}
           placeholder="单位"
+          style={{ width: '100%' }}
           status={!value ? 'error' : ''}
-        />
+        >
+          <Option value="套">套</Option>
+          <Option value="台">台</Option>
+          <Option value="个">个</Option>
+          <Option value="支">支</Option>
+          <Option value="件">件</Option>
+          <Option value="米">米</Option>
+          <Option value="kg">kg</Option>
+          <Option value="m²">m²</Option>
+          <Option value="m³">m³</Option>
+        </Select>
       )
     },
     {
       title: '数量',
       dataIndex: 'quantity',
-      width: 100,
+      width: 80,
       render: (value, record) => (
         <InputNumber
           value={value}
@@ -468,7 +499,7 @@ function ExpenseContractCreate() {
     {
       title: '单价（元）',
       dataIndex: 'unit_price',
-      width: 120,
+      width: 100,
       render: (value, record) => (
         <InputNumber
           value={value}
@@ -484,7 +515,7 @@ function ExpenseContractCreate() {
     {
       title: '小计（元）',
       dataIndex: 'total_price',
-      width: 120,
+      width: 100,
       render: (value) => (
         <span style={{ fontWeight: 'bold' }}>
           ¥{(value || 0).toFixed(2)}
@@ -492,8 +523,41 @@ function ExpenseContractCreate() {
       )
     },
     {
+      title: '税票',
+      dataIndex: 'invoice_type',
+      width: 80,
+      render: (value, record) => (
+        <Select
+          value={value || '普票'}
+          onChange={(val) => updateItem(record.key, 'invoice_type', val)}
+          style={{ width: '100%' }}
+        >
+          <Option value="普票">普票</Option>
+          <Option value="专票">专票</Option>
+        </Select>
+      )
+    },
+    {
+      title: '税点',
+      dataIndex: 'tax_rate',
+      width: 80,
+      render: (value, record) => (
+        <Select
+          value={value || 13}
+          onChange={(val) => updateItem(record.key, 'tax_rate', val)}
+          style={{ width: '100%' }}
+        >
+          <Option value={1}>1%</Option>
+          <Option value={3}>3%</Option>
+          <Option value={6}>6%</Option>
+          <Option value={9}>9%</Option>
+          <Option value={13}>13%</Option>
+        </Select>
+      )
+    },
+    {
       title: '操作',
-      width: 60,
+      width: 50,
       render: (_, record) => (
         <Button
           type="text"
