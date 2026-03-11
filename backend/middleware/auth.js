@@ -6,7 +6,7 @@
 const jwt = require('jsonwebtoken');
 
 // 从环境变量获取 JWT 密钥
-const JWT_SECRET = process.env.JWT_SECRET || 'default-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || 'your-super-secret-jwt-key';
 // Token 有效期（2小时）
 const TOKEN_EXPIRES_IN = '2h';
 
