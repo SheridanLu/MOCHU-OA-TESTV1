@@ -49,6 +49,11 @@ function getAuthHeaders() {
 
 /**
  * 支出合同创建页面
+ * 
+ * 合同分类说明：
+ * - 设备类(equipment)：仅校验物料名称、单位、数量（规格型号可选）
+ * - 材料类(material)：校验规格型号、物料名称、单位、数量（全部必填）
+ * 
  * 编号规则：EC + YYMMDD + 2位序号（每日重置）
  * 例如：EC25030701
  * 
@@ -70,6 +75,7 @@ function ExpenseContractCreate() {
   const [overageWarnings, setOverageWarnings] = useState([]);
   const [contractItems, setContractItems] = useState([]);
   const [hasOverage, setHasOverage] = useState(false);
+  const [contractCategory, setContractCategory] = useState('equipment'); // 合同分类
   const [addSupplierVisible, setAddSupplierVisible] = useState(false);
   const [supplierForm] = Form.useForm();
 
@@ -289,6 +295,35 @@ function ExpenseContractCreate() {
       return;
     }
 
+    // 校验合同明细
+    const category = values.contract_category || 'equipment';
+    for (let i = 0; i < contractItems.length; i++) {
+      const item = contractItems[i];
+      // 设备类和材料类都必填：物料名称、单位、数量
+      if (!item.material_name) {
+        message.error(`第${i + 1}项：请填写物料名称`);
+        return;
+      }
+      if (!item.unit) {
+        message.error(`第${i + 1}项：请填写单位`);
+        return;
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        message.error(`第${i + 1}项：请填写有效数量`);
+        return;
+      }
+      // 材料类额外校验：规格型号必填
+      if (category === 'material' && !item.specification) {
+        message.error(`第${i + 1}项：材料类合同必须填写规格型号`);
+        return;
+      }
+    }
+
+    if (contractItems.length === 0) {
+      message.error('请至少添加一条合同明细');
+      return;
+    }
+
     // 检查是否有超量情况
     if (hasOverage) {
       Modal.confirm({
@@ -327,6 +362,7 @@ function ExpenseContractCreate() {
         sign_date: values.sign_date ? values.sign_date.format('YYYY-MM-DD') : null,
         start_date: start_date ? start_date.format('YYYY-MM-DD') : null,
         end_date: end_date ? end_date.format('YYYY-MM-DD') : null,
+        contract_category: values.contract_category || 'equipment',
         description: values.description
       };
 
@@ -362,7 +398,7 @@ function ExpenseContractCreate() {
     navigate('/contract/list');
   };
 
-  // 合同明细表格列定义
+  // 合同明细表格列定义 - 根据合同分类动态调整
   const itemColumns = [
     {
       title: '物料名称',
@@ -373,10 +409,24 @@ function ExpenseContractCreate() {
           value={value}
           onChange={(e) => updateItem(record.key, 'material_name', e.target.value)}
           placeholder="请输入物料名称"
+          status={!value ? 'error' : ''}
         />
       )
     },
-    {
+    // 规格型号列 - 材料类必填，设备类可选
+    ...(contractCategory === 'material' ? [{
+      title: <span>规格型号 <span style={{color: '#ff4d4f'}}>*</span></span>,
+      dataIndex: 'specification',
+      width: 120,
+      render: (value, record) => (
+        <Input
+          value={value}
+          onChange={(e) => updateItem(record.key, 'specification', e.target.value)}
+          placeholder="规格(必填)"
+          status={!value ? 'error' : ''}
+        />
+      )
+    }] : [{
       title: '规格型号',
       dataIndex: 'specification',
       width: 120,
@@ -384,10 +434,10 @@ function ExpenseContractCreate() {
         <Input
           value={value}
           onChange={(e) => updateItem(record.key, 'specification', e.target.value)}
-          placeholder="规格"
+          placeholder="规格(可选)"
         />
       )
-    },
+    }]),
     {
       title: '单位',
       dataIndex: 'unit',
@@ -397,6 +447,7 @@ function ExpenseContractCreate() {
           value={value}
           onChange={(e) => updateItem(record.key, 'unit', e.target.value)}
           placeholder="单位"
+          status={!value ? 'error' : ''}
         />
       )
     },
@@ -616,7 +667,10 @@ function ExpenseContractCreate() {
                 initialValue="equipment"
                 tooltip="设备类：仅校验物料名称、单位、数量；材料类：校验型号规格、物料名称、单位、数量"
               >
-                <Select placeholder="请选择合同分类">
+                <Select 
+                  placeholder="请选择合同分类"
+                  onChange={(value) => setContractCategory(value)}
+                >
                   <Option value="equipment">设备类</Option>
                   <Option value="material">材料类</Option>
                 </Select>
