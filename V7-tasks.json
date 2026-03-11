@@ -17,11 +17,11 @@
       "description": "为虚拟转实体添加采购员→财务→总经理审批流程",
       "category": "后端",
       "priority": "high",
-      "status": "in_progress",
+      "status": "completed",
       "assigned_to": "claude",
       "started_at": "2026-03-11T19:27:00+08:00",
-      "completed_at": null,
-      "notes": []
+      "completed_at": "2026-03-11T19:42:00+08:00",
+      "notes": ["已添加 convert-with-approval API", "已添加 process-conversion API"]
     },
     {
       "id": 2,
@@ -29,11 +29,11 @@
       "description": "为虚拟中止添加采购员→财务→总经理审批流程",
       "category": "后端",
       "priority": "high",
-      "status": "pending",
-      "assigned_to": null,
-      "started_at": null,
-      "completed_at": null,
-      "notes": []
+      "status": "completed",
+      "assigned_to": "claude",
+      "started_at": "2026-03-11T19:27:00+08:00",
+      "completed_at": "2026-03-11T19:42:00+08:00",
+      "notes": ["已添加 abort-with-approval API", "已添加 process-abort API"]
     },
     {
       "id": 3,
@@ -41,11 +41,11 @@
       "description": "中止时选择成本下挂项目（实体项目/部门成本）",
       "category": "后端",
       "priority": "high",
-      "status": "pending",
-      "assigned_to": null,
-      "started_at": null,
-      "completed_at": null,
-      "notes": []
+      "status": "completed",
+      "assigned_to": "claude",
+      "started_at": "2026-03-11T19:27:00+08:00",
+      "completed_at": "2026-03-11T19:42:00+08:00",
+      "notes": ["已添加 cost_target_type 和 cost_target_id 字段", "已添加 cost-targets API"]
     },
     {
       "id": 4,
@@ -53,17 +53,17 @@
       "description": "完善虚拟转实体和中止的审批前端页面",
       "category": "前端",
       "priority": "medium",
-      "status": "pending",
-      "assigned_to": null,
-      "started_at": null,
+      "status": "in_progress",
+      "assigned_to": "claude",
+      "started_at": "2026-03-11T19:42:00+08:00",
       "completed_at": null,
       "notes": []
     }
   ],
   "statistics": {
     "total": 4,
-    "pending": 3,
+    "pending": 0,
     "in_progress": 1,
-    "completed": 0
+    "completed": 3
   }
 }
