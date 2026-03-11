@@ -107,6 +107,7 @@ function ProjectList() {
   // 虚拟项目中止弹窗
   const [abortVisible, setAbortVisible] = useState(false);
   const [abortingProject, setAbortingProject] = useState(null);
+  const [costTargets, setCostTargets] = useState({ entityProjects: [], departments: [] });
   const [abortForm] = Form.useForm();
 
   // 项目详情弹窗
@@ -334,14 +335,13 @@ function ProjectList() {
     setConvertVisible(true);
   };
 
-  // 执行虚拟项目转换
+  // 执行虚拟项目转换（带审批流程）
   const handleConvert = async () => {
     try {
       const values = await convertForm.validateFields();
       setSubmitting(true);
 
       const data = {
-        id: convertingProject.id,
         bid_notice_no: values.bid_notice_no,
         bid_notice_date: values.bid_notice_date?.format('YYYY-MM-DD'),
         contract_amount: values.contract_amount,
@@ -349,7 +349,7 @@ function ProjectList() {
         end_date: values.date_range?.[1]?.format('YYYY-MM-DD')
       };
 
-      const response = await fetch(`${API_BASE}/projects/virtual/convert`, {
+      const response = await fetch(`${API_BASE}/projects/${convertingProject.id}/convert-with-approval`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify(data)
@@ -357,7 +357,7 @@ function ProjectList() {
 
       const result = await response.json();
       if (result.success) {
-        message.success(`虚拟项目转换成功！新实体项目编号：${result.data.entityProject.project_no}`);
+        message.success('转实体申请已提交，等待审批');
         setConvertVisible(false);
         setConvertingProject(null);
         loadProjects();
@@ -373,30 +373,46 @@ function ProjectList() {
   };
 
   // 打开虚拟项目中止弹窗
-  const openAbortModal = (project) => {
+  const openAbortModal = async (project) => {
     setAbortingProject(project);
     abortForm.resetFields();
+    
+    // 获取成本归集目标列表
+    try {
+      const response = await fetch(`${API_BASE}/projects/cost-targets`, {
+        headers: getAuthHeaders()
+      });
+      const result = await response.json();
+      if (result.success) {
+        setCostTargets(result.data);
+      }
+    } catch (error) {
+      console.error('获取成本目标列表失败:', error);
+    }
+    
     setAbortVisible(true);
   };
 
-  // 执行虚拟项目中止
+  // 执行虚拟项目中止（带审批流程）
   const handleAbort = async () => {
     try {
       const values = await abortForm.validateFields();
       setSubmitting(true);
 
-      const response = await fetch(`${API_BASE}/projects/${abortingProject.id}/abort`, {
+      const response = await fetch(`${API_BASE}/projects/${abortingProject.id}/abort-with-approval`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
           reason: values.abort_reason,
-          remarks: values.abort_remarks
+          remarks: values.abort_remarks,
+          cost_target_type: values.cost_target_type,
+          cost_target_id: values.cost_target_id
         })
       });
 
       const result = await response.json();
       if (result.success) {
-        message.success('虚拟项目已中止');
+        message.success('中止申请已提交，等待审批');
         setAbortVisible(false);
         setAbortingProject(null);
         loadProjects();
@@ -876,7 +892,7 @@ function ProjectList() {
           setConvertingProject(null);
         }}
         confirmLoading={submitting}
-        okText="确认转换"
+        okText="提交审批"
         cancelText="取消"
         width={600}
         destroyOnClose
@@ -1001,12 +1017,57 @@ function ProjectList() {
                 name="abort_remarks"
                 label="备注"
               >
-                <TextArea rows={3} placeholder="请输入备注（可选）" />
+                <TextArea rows={2} placeholder="请输入备注（可选）" />
+              </Form.Item>
+
+              <Form.Item
+                name="cost_target_type"
+                label="成本归集目标类型"
+                tooltip="中止后成本将归集到选择的目标"
+              >
+                <Select placeholder="请选择成本归集目标类型（可选）" allowClear>
+                  <Select.Option value={1}>实体项目</Select.Option>
+                  <Select.Option value={2}>部门成本</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item
+                name="cost_target_id"
+                label="成本归集目标"
+                shouldUpdate={(prevValues, curValues) => prevValues.cost_target_type !== curValues.cost_target_type}
+              >
+                <Form.Item noStyle shouldUpdate>
+                  {({ getFieldValue }) => {
+                    const targetType = getFieldValue('cost_target_type');
+                    if (targetType === 1) {
+                      return (
+                        <Select placeholder="请选择实体项目" allowClear showSearch optionFilterProp="children">
+                          {costTargets.entityProjects.map(p => (
+                            <Select.Option key={p.id} value={p.id}>
+                              {p.project_no} - {p.name}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      );
+                    } else if (targetType === 2) {
+                      return (
+                        <Select placeholder="请选择部门" allowClear showSearch optionFilterProp="children">
+                          {costTargets.departments.map(d => (
+                            <Select.Option key={d.id} value={d.id}>
+                              {d.name}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      );
+                    }
+                    return <Select placeholder="请先选择成本归集目标类型" disabled />;
+                  }}
+                </Form.Item>
               </Form.Item>
             </Form>
 
-            <div style={{ color: '#ff4d4f', fontSize: 12 }}>
-              提示：中止后虚拟项目将不可恢复
+            <div style={{ color: '#faad14', fontSize: 12 }}>
+              提示：中止申请将进入审批流程（财务 → 总经理）
             </div>
           </>
         )}
