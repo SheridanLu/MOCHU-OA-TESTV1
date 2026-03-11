@@ -319,9 +319,12 @@ function UserManage() {
           const response = await api.put(`/users/${record.id}`, { password: '123456' });
           if (response.data.success) {
             message.success('密码已重置为 123456');
+          } else {
+            message.error(response.data.message || '重置密码失败');
           }
-        } catch {
-          message.error('重置密码失败');
+        } catch (error) {
+          console.error('重置密码失败:', error);
+          message.error(error.response?.data?.message || '重置密码失败');
         }
       },
     });
@@ -341,25 +344,21 @@ function UserManage() {
       okText: '确定',
       okType: 'danger',
       cancelText: '取消',
-      onOk: () => handleDelete(record.id),
+      onOk: async () => {
+        try {
+          const response = await api.delete(`/users/${record.id}`);
+          if (response.data.success) {
+            message.success('用户删除成功');
+            fetchUsers();
+          } else {
+            message.error(response.data.message || '删除用户失败');
+          }
+        } catch (error) {
+          console.error('删除用户失败:', error);
+          message.error(error.response?.data?.message || '删除用户失败');
+        }
+      },
     });
-  };
-
-  // 删除用户
-  const handleDelete = async (id) => {
-    try {
-      const response = await api.delete(`/users/${id}`);
-      if (response.data.success) {
-        message.success('用户删除成功');
-        fetchUsers();
-      }
-    } catch (error) {
-      if (error.response?.data?.message) {
-        message.error(error.response.data.message);
-      } else {
-        message.error('删除用户失败');
-      }
-    }
   };
 
   // 提交表单
