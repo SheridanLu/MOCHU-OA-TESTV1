@@ -174,6 +174,7 @@ function UserManage() {
                 },
               ],
               onClick: ({ key }) => {
+                console.log('Dropdown clicked:', key, record);
                 if (key === 'toggleStatus') {
                   handleToggleStatus(record);
                 } else if (key === 'resetPassword') {
@@ -338,7 +339,9 @@ function UserManage() {
 
   // 删除确认
   const handleDeleteConfirm = (record) => {
+    console.log('handleDeleteConfirm called:', record);
     Modal.confirm({
+      getContainer: () => document.body,
       title: '确认删除',
       icon: <ExclamationCircleOutlined />,
       content: (
@@ -351,8 +354,10 @@ function UserManage() {
       okType: 'danger',
       cancelText: '取消',
       onOk: async () => {
+        console.log('Delete onOk called, user id:', record.id);
         try {
           const response = await api.delete(`/users/${record.id}`);
+          console.log('Delete response:', response);
           if (response.data.success) {
             message.success('用户删除成功');
             fetchUsers();
