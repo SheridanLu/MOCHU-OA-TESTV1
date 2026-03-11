@@ -1,5 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Drawer, Button } from 'antd';
+import { MenuOutlined } from '@ant-design/icons';
 import './App.css';
 
 // 登录相关
@@ -265,7 +267,19 @@ function Sidebar({ collapsed, onToggle }) {
 // 主布局组件
 function MainLayout({ children }) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileMenuVisible, setMobileMenuVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+  // 检测屏幕尺寸
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -273,21 +287,102 @@ function MainLayout({ children }) {
     window.location.href = '/login';
   };
 
+  // 移动端菜单内容
+  const mobileMenuContent = (
+    <div className="mobile-menu">
+      <div className="mobile-menu-header">
+        <h3>MOCHU OA</h3>
+        <span className="user-name">{user.real_name || user.username}</span>
+      </div>
+      <nav className="mobile-menu-nav">
+        {menuConfig.map(menu => (
+          <div key={menu.key} className="mobile-menu-group">
+            {menu.path ? (
+              <Link 
+                to={menu.path} 
+                className="mobile-menu-item"
+                onClick={() => setMobileMenuVisible(false)}
+              >
+                <span className="menu-icon">{menu.icon}</span>
+                <span>{menu.name}</span>
+              </Link>
+            ) : (
+              <>
+                <div className="mobile-menu-title">
+                  <span className="menu-icon">{menu.icon}</span>
+                  <span>{menu.name}</span>
+                </div>
+                <div className="mobile-menu-children">
+                  {menu.children && menu.children.map(child => (
+                    <Link
+                      key={child.key}
+                      to={child.path}
+                      className="mobile-menu-child"
+                      onClick={() => setMobileMenuVisible(false)}
+                    >
+                      {child.name}
+                    </Link>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </nav>
+      <div className="mobile-menu-footer">
+        <button onClick={handleLogout} className="mobile-logout-btn">
+          退出登录
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="main-layout">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
-      <div className={`main-content ${collapsed ? 'expanded' : ''}`}>
+      {/* 桌面端侧边栏 */}
+      {!isMobile && (
+        <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(!collapsed)} />
+      )}
+      
+      {/* 移动端抽屉菜单 */}
+      {isMobile && (
+        <Drawer
+          title={null}
+          placement="left"
+          onClose={() => setMobileMenuVisible(false)}
+          open={mobileMenuVisible}
+          width={280}
+          className="mobile-drawer"
+          closable={false}
+        >
+          {mobileMenuContent}
+        </Drawer>
+      )}
+      
+      <div className={`main-content ${collapsed ? 'expanded' : ''} ${isMobile ? 'mobile' : ''}`}>
         <header className="main-header">
           <div className="header-left">
-            <h1>MOCHU OA 办公系统</h1>
+            {isMobile && (
+              <Button 
+                type="text" 
+                icon={<MenuOutlined />} 
+                onClick={() => setMobileMenuVisible(true)}
+                className="mobile-menu-btn"
+              />
+            )}
+            <h1>{isMobile ? 'OA' : 'MOCHU OA 办公系统'}</h1>
           </div>
           <div className="header-right">
-            <span className="user-info">
-              欢迎，{user.real_name || user.username}
-            </span>
-            <button onClick={handleLogout} className="logout-btn">
-              退出登录
-            </button>
+            {!isMobile && (
+              <span className="user-info">
+                欢迎，{user.real_name || user.username}
+              </span>
+            )}
+            {!isMobile && (
+              <button onClick={handleLogout} className="logout-btn">
+                退出登录
+              </button>
+            )}
           </div>
         </header>
         <main className="main-body">
