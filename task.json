@@ -18,9 +18,9 @@
       "description": "按照方案一重新组织前端页面目录结构",
       "category": "重构",
       "priority": "high",
-      "status": "pending",
-      "assigned": null,
-      "started_at": null,
+      "status": "in_progress",
+      "assigned": "claude",
+      "started_at": "2026-03-11T10:50:00+08:00",
       "completed_at": null,
       "error": null
     },
