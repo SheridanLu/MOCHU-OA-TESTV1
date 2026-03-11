@@ -610,6 +610,22 @@ function ExpenseContractCreate() {
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
+              <Form.Item
+                name="contract_category"
+                label="合同分类"
+                initialValue="equipment"
+                tooltip="设备类：仅校验物料名称、单位、数量；材料类：校验型号规格、物料名称、单位、数量"
+              >
+                <Select placeholder="请选择合同分类">
+                  <Option value="equipment">设备类</Option>
+                  <Option value="material">材料类</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={24}>
+            <Col xs={24} sm={12} md={8}>
               <Form.Item label="合同总金额（元）">
                 <InputNumber
                   value={calculateTotalAmount()}

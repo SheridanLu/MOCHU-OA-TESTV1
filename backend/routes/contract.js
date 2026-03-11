@@ -224,7 +224,8 @@ router.post('/expense', checkPermission('contract:create'), (req, res) => {
     sign_date,
     start_date,
     end_date,
-    description
+    description,
+    contract_category // 合同分类：equipment(设备类) / material(材料类)
   } = req.body;
   
   // 验证必填字段
@@ -281,13 +282,13 @@ router.post('/expense', checkPermission('contract:create'), (req, res) => {
         contract_no, name, type, project_id, 
         party_a, party_b, amount,
         sign_date, start_date, end_date,
-        status, creator_id, supplier_id, purchase_list_id
-      ) VALUES (?, ?, 'expense', ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
+        status, creator_id, supplier_id, purchase_list_id, contract_category
+      ) VALUES (?, ?, 'expense', ?, ?, ?, ?, ?, ?, ?, 'pending', ?, ?, ?, ?)
     `).run(
       contractNo, name, project_id,
       party_a || '本公司', party_b, amount || 0,
       sign_date, start_date, end_date,
-      userId, supplier_id, purchase_list_id
+      userId, supplier_id, purchase_list_id, contract_category || 'equipment'
     );
     
     const newContract = db.prepare(`
