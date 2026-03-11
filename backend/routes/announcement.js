@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../models/database');
-const authMiddleware = require('../middleware/auth');
+const { db } = require('../models/database');
+const { authMiddleware } = require('../middleware/auth');
 
 // 创建公告表
 db.exec(`
