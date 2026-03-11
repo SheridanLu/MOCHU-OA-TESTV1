@@ -782,4 +782,725 @@ router.get('/stats/overview', authMiddleware, (req, res) => {
   }
 });
 
+/**
+ * POST /api/projects/:id/convert-with-approval
+ * 提交虚拟转实体审批申请（采购员→财务→总经理）
+ */
+router.post('/:id/convert-with-approval', authMiddleware, checkPermission('project:convert'), (req, res) => {
+  const { id } = req.params;
+  const {
+    bid_notice_no,      // 中标通知书编号（必填）
+    bid_notice_date,    // 中标日期（必填）
+    contract_amount,    // 合同金额
+    start_date,         // 开始日期
+    end_date,            // 结束日期
+    manager_id,          // 项目经理
+    remark               // 备注
+  } = req.body;
+  const userId = req.user?.userId || req.user?.id;
+  
+  // 检查项目是否存在且为虚拟项目
+  const virtualProject = db.prepare('SELECT * FROM projects WHERE id = ? AND type = ?').get(id, 'virtual');
+  if (!virtualProject) {
+    return res.status(404).json({
+      success: false,
+      message: '虚拟项目不存在'
+    });
+  }
+  
+  // 检查项目状态
+  if (virtualProject.status !== 'tracking') {
+    return res.status(400).json({
+      success: false,
+      message: '只有"跟踪中"状态的虚拟项目才能申请转换'
+    });
+  }
+  
+  // 检查是否已提交审批
+  if (virtualProject.status === 'converting' || virtualProject.converted_to) {
+    return res.status(400).json({
+      success: false,
+      message: '该项目已提交审批或已完成转换'
+    });
+  }
+  
+  // 验证必填字段
+  if (!bid_notice_no || !bid_notice_no.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: '请填写中标通知书编号'
+    });
+  }
+  
+  if (!bid_notice_date) {
+    return res.status(400).json({
+      success: false,
+      message: '请填写中标日期'
+    });
+  }
+  
+  const transaction = db.transaction(() => {
+    // 更新虚拟项目状态为"审批中"并保存申请信息
+    db.prepare(`
+      UPDATE projects SET
+        status = 'converting',
+        bid_notice_no = ?,
+        bid_notice_date = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(bid_notice_no.trim(), bid_notice_date, id);
+    
+    // 创建审批记录（使用现有的审批流程）
+    const approvalResult = db.prepare(`
+      INSERT INTO approvals (project_id, type, status, submitter_id, current_step, total_steps, comment)
+      VALUES (?, 'virtual_convert', 'pending', ?, 1, 2, ?)
+    `).run(id, userId, remark || '虚拟项目转实体申请');
+    
+    const approvalId = approvalResult.lastInsertRowid;
+    
+    // 创建审批流程节点（财务→总经理）
+    // 步骤1：财务审批
+    db.prepare(`
+      INSERT INTO approval_flows (approval_id, step, role, status)
+      VALUES (?, 1, 'FINANCE', 'pending')
+    `).run(approvalId);
+    
+    // 步骤2：总经理审批
+    db.prepare(`
+      INSERT INTO approval_flows (approval_id, step, role, status)
+      VALUES (?, 2, 'GM', 'pending')
+    `).run(approvalId);
+    
+    return approvalId;
+  });
+  
+  try {
+    const approvalId = transaction();
+    
+    res.json({
+      success: true,
+      message: '虚拟转实体申请已提交，等待审批',
+      data: {
+        approvalId,
+        projectId: parseInt(id)
+      }
+    });
+  } catch (error) {
+    console.error('提交审批失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '提交审批失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * POST /api/projects/:id/abort-with-approval
+ * 提交虚拟中止审批申请（采购员→财务→总经理）
+ */
+router.post('/:id/abort-with-approval', authMiddleware, checkPermission('project:abort'), (req, res) => {
+  const { id } = req.params;
+  const {
+    reason,              // 中止原因（必填）
+    remarks,             // 备注
+    cost_target_type,    // 成本下挂类型：1=实体项目 2=部门成本
+    cost_target_id       // 成本下挂目标ID
+  } = req.body;
+  const userId = req.user?.userId || req.user?.id;
+  
+  // 检查项目是否存在且为虚拟项目
+  const virtualProject = db.prepare('SELECT * FROM projects WHERE id = ? AND type = ?').get(id, 'virtual');
+  if (!virtualProject) {
+    return res.status(404).json({
+      success: false,
+      message: '虚拟项目不存在'
+    });
+  }
+  
+  // 检查是否已转换或已中止
+  if (virtualProject.converted_to) {
+    return res.status(400).json({
+      success: false,
+      message: '该虚拟项目已转换为实体项目'
+    });
+  }
+  
+  if (virtualProject.status === 'aborted' || virtualProject.status === 'aborting') {
+    return res.status(400).json({
+      success: false,
+      message: '该项目已中止或正在审批中'
+    });
+  }
+  
+  // 验证必填字段
+  if (!reason || !reason.trim()) {
+    return res.status(400).json({
+      success: false,
+      message: '请填写中止原因'
+    });
+  }
+  
+  // 如果选择了成本下挂，验证目标是否存在
+  if (cost_target_type && cost_target_id) {
+    if (cost_target_type === 1) {
+      // 验证实体项目存在
+      const targetProject = db.prepare('SELECT id FROM projects WHERE id = ? AND type = ?').get(cost_target_id, 'entity');
+      if (!targetProject) {
+        return res.status(400).json({
+          success: false,
+          message: '目标实体项目不存在'
+        });
+      }
+    } else if (cost_target_type === 2) {
+      // 验证部门存在
+      const targetDept = db.prepare('SELECT id FROM departments WHERE id = ?').get(cost_target_id);
+      if (!targetDept) {
+        return res.status(400).json({
+          success: false,
+          message: '目标部门不存在'
+        });
+      }
+    }
+  }
+  
+  const transaction = db.transaction(() => {
+    // 更新虚拟项目状态为"审批中"并保存中止信息
+    db.prepare(`
+      UPDATE projects SET
+        status = 'aborting',
+        abort_reason = ?,
+        abort_remarks = ?,
+        cost_target_type = ?,
+        cost_target_id = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).run(reason.trim(), remarks || null, cost_target_type || null, cost_target_id || null, id);
+    
+    // 创建审批记录
+    const approvalResult = db.prepare(`
+      INSERT INTO approvals (project_id, type, status, submitter_id, current_step, total_steps, comment)
+      VALUES (?, 'virtual_abort', 'pending', ?, 1, 2, ?)
+    `).run(id, userId, reason.trim());
+    
+    const approvalId = approvalResult.lastInsertRowid;
+    
+    // 创建审批流程节点（财务→总经理）
+    db.prepare(`
+      INSERT INTO approval_flows (approval_id, step, role, status)
+      VALUES (?, 1, 'FINANCE', 'pending')
+    `).run(approvalId);
+    
+    db.prepare(`
+      INSERT INTO approval_flows (approval_id, step, role, status)
+      VALUES (?, 2, 'GM', 'pending')
+    `).run(approvalId);
+    
+    return approvalId;
+  });
+  
+  try {
+    const approvalId = transaction();
+    
+    res.json({
+      success: true,
+      message: '虚拟中止申请已提交，等待审批',
+      data: {
+        approvalId,
+        projectId: parseInt(id)
+      }
+    });
+  } catch (error) {
+    console.error('提交审批失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '提交审批失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * POST /api/projects/:id/process-conversion
+ * 处理虚拟转实体审批（财务/总经理审批通过后执行）
+ */
+router.post('/:id/process-conversion', authMiddleware, checkPermission('project:approve'), (req, res) => {
+  const { id } = req.params;
+  const { approve, comment, contract_amount, start_date, end_date } = req.body;
+  const userId = req.user?.userId || req.user?.id;
+  
+  // 获取审批记录
+  const approval = db.prepare(`
+    SELECT * FROM approvals 
+    WHERE project_id = ? AND type = 'virtual_convert' AND status = 'pending'
+  `).get(id);
+  
+  if (!approval) {
+    return res.status(404).json({
+      success: false,
+      message: '未找到待审批的转换申请'
+    });
+  }
+  
+  // 获取虚拟项目
+  const virtualProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+  if (!virtualProject) {
+    return res.status(404).json({
+      success: false,
+      message: '项目不存在'
+    });
+  }
+  
+  // 获取当前审批节点的角色要求
+  const currentFlow = db.prepare(`
+    SELECT * FROM approval_flows 
+    WHERE approval_id = ? AND step = ? AND status = 'pending'
+  `).get(approval.id, approval.current_step);
+  
+  if (!currentFlow) {
+    return res.status(400).json({
+      success: false,
+      message: '当前没有待审批的节点'
+    });
+  }
+  
+  // 检查用户角色
+  const userRoles = db.prepare(`
+    SELECT r.code FROM user_roles ur
+    JOIN roles r ON ur.role_id = r.id
+    WHERE ur.user_id = ?
+  `).all(userId);
+  const roleCodes = userRoles.map(r => r.code);
+  
+  if (!roleCodes.includes(currentFlow.role) && !roleCodes.includes('GM')) {
+    return res.status(403).json({
+      success: false,
+      message: '您没有审批权限'
+    });
+  }
+  
+  const transaction = db.transaction(() => {
+    if (approve) {
+      // 更新审批节点状态
+      db.prepare(`
+        UPDATE approval_flows SET
+          status = 'approved',
+          approver_id = ?,
+          comment = ?,
+          approved_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, comment || null, currentFlow.id);
+      
+      // 检查是否是最后一步
+      if (approval.current_step >= approval.total_steps) {
+        // 最后一步（总经理）审批通过，执行转换
+        db.prepare(`
+          UPDATE approvals SET
+            status = 'approved',
+            current_step = ?,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(approval.total_steps, approval.id);
+        
+        // 生成实体项目编号
+        const entityProjectNo = getProjectNo('entity');
+        
+        // 创建实体项目
+        const result = db.prepare(`
+          INSERT INTO projects (
+            project_no, name, type, customer, contract_amount,
+            manager_id, start_date, end_date, status, converted_from,
+            bid_notice_no, bid_notice_date
+          ) VALUES (?, ?, 'entity', ?, ?, ?, ?, ?, 'pending', ?, ?, ?)
+        `).run(
+          entityProjectNo,
+          virtualProject.name,
+          virtualProject.customer,
+          contract_amount || virtualProject.contract_amount || 0,
+          virtualProject.manager_id,
+          start_date || virtualProject.start_date,
+          end_date || virtualProject.end_date,
+          id,
+          virtualProject.bid_notice_no,
+          virtualProject.bid_notice_date
+        );
+        
+        const entityId = result.lastInsertRowid;
+        
+        // 更新虚拟项目状态
+        db.prepare(`
+          UPDATE projects SET
+            converted_to = ?,
+            converted_at = CURRENT_TIMESTAMP,
+            status = 'converted',
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(entityId, id);
+        
+        return { approved: true, entityId };
+      } else {
+        // 进入下一步
+        db.prepare(`
+          UPDATE approvals SET
+            current_step = current_step + 1,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(approval.id);
+        
+        return { approved: true, entityId: null };
+      }
+    } else {
+      // 驳回
+      db.prepare(`
+        UPDATE approval_flows SET
+          status = 'rejected',
+          approver_id = ?,
+          comment = ?,
+          approved_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, comment || null, currentFlow.id);
+      
+      db.prepare(`
+        UPDATE approvals SET
+          status = 'rejected',
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(approval.id);
+      
+      // 恢复项目状态
+      db.prepare(`
+        UPDATE projects SET
+          status = 'tracking',
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(id);
+      
+      return { approved: false };
+    }
+  });
+  
+  try {
+    const result = transaction();
+    
+    res.json({
+      success: true,
+      message: result.approved ? 
+        (result.entityId ? '审批通过，虚拟项目已转换为实体项目' : '审批通过，等待下一级审批') :
+        '审批已驳回',
+      data: result
+    });
+  } catch (error) {
+    console.error('处理审批失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '处理审批失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * POST /api/projects/:id/process-abort
+ * 处理虚拟中止审批（财务/总经理审批通过后执行）
+ */
+router.post('/:id/process-abort', authMiddleware, checkPermission('project:approve'), (req, res) => {
+  const { id } = req.params;
+  const { approve, comment } = req.body;
+  const userId = req.user?.userId || req.user?.id;
+  
+  // 获取审批记录
+  const approval = db.prepare(`
+    SELECT * FROM approvals 
+    WHERE project_id = ? AND type = 'virtual_abort' AND status = 'pending'
+  `).get(id);
+  
+  if (!approval) {
+    return res.status(404).json({
+      success: false,
+      message: '未找到待审批的中止申请'
+    });
+  }
+  
+  // 获取虚拟项目
+  const virtualProject = db.prepare('SELECT * FROM projects WHERE id = ?').get(id);
+  if (!virtualProject) {
+    return res.status(404).json({
+      success: false,
+      message: '项目不存在'
+    });
+  }
+  
+  // 获取当前审批节点
+  const currentFlow = db.prepare(`
+    SELECT * FROM approval_flows 
+    WHERE approval_id = ? AND step = ? AND status = 'pending'
+  `).get(approval.id, approval.current_step);
+  
+  if (!currentFlow) {
+    return res.status(400).json({
+      success: false,
+      message: '当前没有待审批的节点'
+    });
+  }
+  
+  // 检查用户角色
+  const userRoles = db.prepare(`
+    SELECT r.code FROM user_roles ur
+    JOIN roles r ON ur.role_id = r.id
+    WHERE ur.user_id = ?
+  `).all(userId);
+  const roleCodes = userRoles.map(r => r.code);
+  
+  if (!roleCodes.includes(currentFlow.role) && !roleCodes.includes('GM')) {
+    return res.status(403).json({
+      success: false,
+      message: '您没有审批权限'
+    });
+  }
+  
+  const transaction = db.transaction(() => {
+    if (approve) {
+      // 更新审批节点状态
+      db.prepare(`
+        UPDATE approval_flows SET
+          status = 'approved',
+          approver_id = ?,
+          comment = ?,
+          approved_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, comment || null, currentFlow.id);
+      
+      // 检查是否是最后一步
+      if (approval.current_step >= approval.total_steps) {
+        // 最后一步审批通过，执行中止
+        db.prepare(`
+          UPDATE approvals SET
+            status = 'approved',
+            current_step = ?,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(approval.total_steps, approval.id);
+        
+        // 更新虚拟项目状态为已中止
+        db.prepare(`
+          UPDATE projects SET
+            status = 'aborted',
+            aborted_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(id);
+        
+        // 如果有成本归集目标，记录归集关系
+        if (virtualProject.cost_target_type && virtualProject.cost_target_id) {
+          // 这里可以添加成本归集的具体业务逻辑
+          // 例如：将虚拟项目的成本记录迁移到目标项目/部门
+        }
+        
+        return { approved: true, aborted: true };
+      } else {
+        // 进入下一步
+        db.prepare(`
+          UPDATE approvals SET
+            current_step = current_step + 1,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(approval.id);
+        
+        return { approved: true, aborted: false };
+      }
+    } else {
+      // 驳回
+      db.prepare(`
+        UPDATE approval_flows SET
+          status = 'rejected',
+          approver_id = ?,
+          comment = ?,
+          approved_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, comment || null, currentFlow.id);
+      
+      db.prepare(`
+        UPDATE approvals SET
+          status = 'rejected',
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(approval.id);
+      
+      // 恢复项目状态
+      db.prepare(`
+        UPDATE projects SET
+          status = 'tracking',
+          abort_reason = NULL,
+          abort_remarks = NULL,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(id);
+      
+      return { approved: false };
+    }
+  });
+  
+  try {
+    const result = transaction();
+    
+    res.json({
+      success: true,
+      message: result.approved ? 
+        (result.aborted ? '审批通过，虚拟项目已中止' : '审批通过，等待下一级审批') :
+        '审批已驳回',
+      data: result
+    });
+  } catch (error) {
+    console.error('处理审批失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '处理审批失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * GET /api/projects/:id/conversion-status
+ * 获取虚拟转实体审批状态
+ */
+router.get('/:id/conversion-status', authMiddleware, (req, res) => {
+  const { id } = req.params;
+  
+  const approval = db.prepare(`
+    SELECT a.*, 
+           p.name as project_name,
+           p.project_no,
+           p.status as project_status,
+           p.bid_notice_no,
+           p.bid_notice_date
+    FROM approvals a
+    LEFT JOIN projects p ON a.project_id = p.id
+    WHERE a.project_id = ? AND a.type = 'virtual_convert'
+    ORDER BY a.created_at DESC
+    LIMIT 1
+  `).get(id);
+  
+  if (!approval) {
+    return res.json({
+      success: true,
+      data: null,
+      message: '无审批记录'
+    });
+  }
+  
+  // 获取审批流程
+  const flows = db.prepare(`
+    SELECT af.*, u.real_name as approver_name
+    FROM approval_flows af
+    LEFT JOIN users u ON af.approver_id = u.id
+    WHERE af.approval_id = ?
+    ORDER BY af.step
+  `).all(approval.id);
+  
+  res.json({
+    success: true,
+    data: {
+      ...approval,
+      flows
+    }
+  });
+});
+
+/**
+ * GET /api/projects/:id/abort-status
+ * 获取虚拟中止审批状态
+ */
+router.get('/:id/abort-status', authMiddleware, (req, res) => {
+  const { id } = req.params;
+  
+  const approval = db.prepare(`
+    SELECT a.*, 
+           p.name as project_name,
+           p.project_no,
+           p.status as project_status,
+           p.abort_reason,
+           p.abort_remarks,
+           p.cost_target_type,
+           p.cost_target_id
+    FROM approvals a
+    LEFT JOIN projects p ON a.project_id = p.id
+    WHERE a.project_id = ? AND a.type = 'virtual_abort'
+    ORDER BY a.created_at DESC
+    LIMIT 1
+  `).get(id);
+  
+  if (!approval) {
+    return res.json({
+      success: true,
+      data: null,
+      message: '无审批记录'
+    });
+  }
+  
+  // 获取审批流程
+  const flows = db.prepare(`
+    SELECT af.*, u.real_name as approver_name
+    FROM approval_flows af
+    LEFT JOIN users u ON af.approver_id = u.id
+    WHERE af.approval_id = ?
+    ORDER BY af.step
+  `).all(approval.id);
+  
+  // 获取成本归集目标名称
+  let costTargetName = null;
+  if (approval.cost_target_type && approval.cost_target_id) {
+    if (approval.cost_target_type === 1) {
+      const targetProject = db.prepare('SELECT name FROM projects WHERE id = ?').get(approval.cost_target_id);
+      costTargetName = targetProject?.name;
+    } else if (approval.cost_target_type === 2) {
+      const targetDept = db.prepare('SELECT name FROM departments WHERE id = ?').get(approval.cost_target_id);
+      costTargetName = targetDept?.name;
+    }
+  }
+  
+  res.json({
+    success: true,
+    data: {
+      ...approval,
+      flows,
+      costTargetName
+    }
+  });
+});
+
+/**
+ * GET /api/projects/cost-targets
+ * 获取成本下挂目标列表（实体项目+部门）
+ */
+router.get('/cost-targets', authMiddleware, (req, res) => {
+  try {
+    // 获取所有进行中的实体项目
+    const entityProjects = db.prepare(`
+      SELECT id, project_no, name, 'entity' as type
+      FROM projects 
+      WHERE type = 'entity' AND status IN ('pending', 'in_progress')
+      ORDER BY created_at DESC
+    `).all();
+    
+    // 获取所有部门
+    const departments = db.prepare(`
+      SELECT id, name, 'department' as type
+      FROM departments
+      WHERE status = 1
+      ORDER BY name
+    `).all();
+    
+    res.json({
+      success: true,
+      data: {
+        entityProjects,
+        departments
+      }
+    });
+  } catch (error) {
+    console.error('获取成本目标列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取成本目标列表失败'
+    });
+  }
+});
+
 module.exports = router;
