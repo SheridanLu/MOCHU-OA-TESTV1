@@ -159,13 +159,11 @@ function UserManage() {
                   key: 'toggleStatus',
                   label: record.status === 'active' ? '禁用' : '启用',
                   icon: record.status === 'active' ? <StopOutlined /> : <CheckCircleOutlined />,
-                  onClick: () => handleToggleStatus(record),
                 },
                 {
                   key: 'resetPassword',
                   label: '重置密码',
                   icon: <LockOutlined />,
-                  onClick: () => handleResetPassword(record),
                 },
                 { type: 'divider' },
                 {
@@ -173,9 +171,17 @@ function UserManage() {
                   label: '删除',
                   icon: <DeleteOutlined />,
                   danger: true,
-                  onClick: () => handleDeleteConfirm(record),
                 },
               ],
+              onClick: ({ key }) => {
+                if (key === 'toggleStatus') {
+                  handleToggleStatus(record);
+                } else if (key === 'resetPassword') {
+                  handleResetPassword(record);
+                } else if (key === 'delete') {
+                  handleDeleteConfirm(record);
+                }
+              },
             }}
             trigger={['click']}
           >
