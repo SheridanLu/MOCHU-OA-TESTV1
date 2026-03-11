@@ -5,6 +5,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import './Login.css';
 
+const API_BASE = window.location.origin;
+
 const { Title, Text } = Typography;
 
 /**
@@ -54,7 +56,7 @@ const LoginVerify = () => {
     setSendingCode(true);
 
     try {
-      const response = await axios.post('/api/auth/send-sms', {
+      const response = await axios.post(`${API_BASE}/api/auth/send-sms`, {
         phone: user.phone
       });
 
@@ -98,7 +100,7 @@ const LoginVerify = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login-password', {
+      const response = await axios.post(`${API_BASE}/api/auth/login-password`, {
         account: account,
         password: values.password
       });
@@ -132,7 +134,7 @@ const LoginVerify = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login-sms', {
+      const response = await axios.post(`${API_BASE}/api/auth/login-sms`, {
         phone: user.phone,
         code: values.code
       });

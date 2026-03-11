@@ -9,7 +9,7 @@ import { useState, useEffect } from 'react';
 import './SiteVisa.css';
 
 // API 基础路径
-const API_BASE = '/api';
+const API_BASE = window.location.origin + '/api';
 
 // 状态映射
 const STATUS_MAP = {

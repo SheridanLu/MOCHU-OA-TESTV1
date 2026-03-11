@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 
-const API_BASE = '/api';
+const API_BASE = window.location.origin + '/api';
 
 // 通用样式
 const styles = {

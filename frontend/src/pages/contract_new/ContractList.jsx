@@ -34,7 +34,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 // API 基础地址
-const API_BASE = '/api';
+const API_BASE = window.location.origin + '/api';
 
 // 获取请求头
 function getAuthHeaders() {

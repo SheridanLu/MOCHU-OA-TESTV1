@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
-const API_BASE = '/api';
+const API_BASE = window.location.origin + '/api';
 
 // 通用样式
 const styles = {
