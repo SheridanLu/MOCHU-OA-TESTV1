@@ -83,7 +83,6 @@ const menuConfig = [
       { key: 'roles', name: '角色管理', path: '/system/roles' },
       { key: 'permissions', name: '权限分配', path: '/system/permissions' },
       { key: 'announcements', name: '通知公告', path: '/system/announcements' },
-      { key: 'announcements', name: '通知公告', path: '/system/announcements' },
       { key: 'audit', name: '操作日志', path: '/system/audit' },
     ]
   },
