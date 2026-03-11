@@ -80,13 +80,18 @@ function PurchaseListList() {
   // 加载项目列表
   const loadProjects = async () => {
     try {
-      const response = await fetch(`${API_BASE}/projects?type=entity&status=active&page=1&pageSize=100`, {
+      // 获取所有实体项目（不限制状态，或只获取非中止的项目）
+      const response = await fetch(`${API_BASE}/projects?type=entity&page=1&pageSize=100`, {
         headers: getAuthHeaders()
       });
       const result = await response.json();
       
       if (result.success) {
-        setProjects(result.data || []);
+        // 过滤掉已中止和已转换的虚拟项目
+        const activeProjects = (result.data || []).filter(p => 
+          p.status !== 'aborted' && p.status !== 'converted'
+        );
+        setProjects(activeProjects);
       }
     } catch (error) {
       console.error('加载项目列表失败:', error);
