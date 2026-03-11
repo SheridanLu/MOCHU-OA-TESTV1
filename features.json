@@ -1,0 +1,662 @@
+{
+  "project": "MOCHU-OA",
+  "version": "V3",
+  "lastUpdated": "2026-03-11T10:15:00+08:00",
+  "description": "MOCHU OA 办公自动化系统 - 功能测试清单",
+  "categories": [
+    {
+      "name": "认证模块",
+      "features": [
+        {
+          "id": "auth-001",
+          "description": "用户可以输入用户名或手机号，系统检查账号是否存在",
+          "steps": [
+            "访问登录页面 http://43.153.149.71:3001",
+            "输入用户名 'Yezhicheng'",
+            "点击下一步",
+            "验证系统跳转到第二阶段认证页面"
+          ],
+          "passes": false
+        },
+        {
+          "id": "auth-002",
+          "description": "用户可以使用密码登录",
+          "steps": [
+            "输入用户名 'Yezhicheng'",
+            "选择密码登录方式",
+            "输入密码 '123456'",
+            "点击登录",
+            "验证成功跳转到首页"
+          ],
+          "passes": false
+        },
+        {
+          "id": "auth-003",
+          "description": "用户可以使用短信验证码登录",
+          "steps": [
+            "输入手机号 '13971242323'",
+            "选择验证码登录方式",
+            "点击获取验证码",
+            "输入验证码",
+            "点击登录",
+            "验证成功跳转到首页"
+          ],
+          "passes": false
+        },
+        {
+          "id": "auth-004",
+          "description": "连续5次密码错误后账户锁定30分钟",
+          "steps": [
+            "输入正确用户名",
+            "连续输入5次错误密码",
+            "验证第5次后显示锁定提示",
+            "等待30分钟后验证可重新登录"
+          ],
+          "passes": false
+        },
+        {
+          "id": "auth-005",
+          "description": "验证码发送间隔60秒",
+          "steps": [
+            "点击获取验证码",
+            "立即再次点击",
+            "验证显示等待秒数提示"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "组织架构",
+      "features": [
+        {
+          "id": "org-001",
+          "description": "部门树形结构展示",
+          "steps": [
+            "登录后进入组织架构页面",
+            "验证显示7个核心部门",
+            "验证支持展开收起"
+          ],
+          "passes": false
+        },
+        {
+          "id": "org-002",
+          "description": "新增部门",
+          "steps": [
+            "点击新增部门按钮",
+            "填写部门名称",
+            "选择上级部门",
+            "点击保存",
+            "验证新部门出现在树中"
+          ],
+          "passes": false
+        },
+        {
+          "id": "org-003",
+          "description": "编辑部门",
+          "steps": [
+            "选择一个部门",
+            "点击编辑按钮",
+            "修改部门名称",
+            "点击保存",
+            "验证修改成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "org-004",
+          "description": "删除部门",
+          "steps": [
+            "选择一个无下级部门的部门",
+            "点击删除按钮",
+            "确认删除",
+            "验证部门从树中移除"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "用户管理",
+      "features": [
+        {
+          "id": "user-001",
+          "description": "用户列表分页展示",
+          "steps": [
+            "进入用户管理页面",
+            "验证用户列表显示",
+            "验证分页功能正常"
+          ],
+          "passes": false
+        },
+        {
+          "id": "user-002",
+          "description": "新增用户",
+          "steps": [
+            "点击新增用户按钮",
+            "填写用户信息",
+            "点击保存",
+            "验证用户创建成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "user-003",
+          "description": "编辑用户",
+          "steps": [
+            "选择一个用户",
+            "点击编辑按钮",
+            "修改用户信息",
+            "点击保存",
+            "验证修改成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "user-004",
+          "description": "禁用/启用用户",
+          "steps": [
+            "选择一个active状态的用户",
+            "点击禁用按钮",
+            "验证状态变为inactive",
+            "点击启用按钮",
+            "验证状态变为active"
+          ],
+          "passes": false
+        },
+        {
+          "id": "user-005",
+          "description": "搜索用户",
+          "steps": [
+            "在搜索框输入用户名",
+            "点击搜索",
+            "验证显示匹配的用户"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "通讯录",
+      "features": [
+        {
+          "id": "dir-001",
+          "description": "通讯录列表展示",
+          "steps": [
+            "进入通讯录页面",
+            "验证显示所有active状态的用户",
+            "验证inactive用户不显示"
+          ],
+          "passes": false
+        },
+        {
+          "id": "dir-002",
+          "description": "按部门筛选",
+          "steps": [
+            "选择一个部门",
+            "验证只显示该部门用户"
+          ],
+          "passes": false
+        },
+        {
+          "id": "dir-003",
+          "description": "搜索员工",
+          "steps": [
+            "输入员工姓名或手机号",
+            "验证搜索结果正确"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "角色权限",
+      "features": [
+        {
+          "id": "role-001",
+          "description": "角色列表展示",
+          "steps": [
+            "进入角色管理页面",
+            "验证显示10个核心角色"
+          ],
+          "passes": false
+        },
+        {
+          "id": "role-002",
+          "description": "为用户分配角色",
+          "steps": [
+            "选择一个用户",
+            "分配角色",
+            "保存",
+            "验证角色分配成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "role-003",
+          "description": "权限校验",
+          "steps": [
+            "使用普通用户登录",
+            "访问需要特定权限的页面",
+            "验证无权限时显示提示"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "项目管理",
+      "features": [
+        {
+          "id": "proj-001",
+          "description": "创建实体项目",
+          "steps": [
+            "进入项目管理页面",
+            "点击新建实体项目",
+            "填写项目信息",
+            "提交",
+            "验证项目创建成功，编号格式为 P+YYMMDD+3位序号"
+          ],
+          "passes": false
+        },
+        {
+          "id": "proj-002",
+          "description": "创建虚拟项目",
+          "steps": [
+            "点击新建虚拟项目",
+            "填写项目信息",
+            "提交",
+            "验证项目创建成功，编号格式为 V+YYMM+3位序号"
+          ],
+          "passes": false
+        },
+        {
+          "id": "proj-003",
+          "description": "虚拟项目转实体",
+          "steps": [
+            "选择一个tracking状态的虚拟项目",
+            "点击转为实体",
+            "填写中标通知书信息",
+            "提交",
+            "验证转换成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "proj-004",
+          "description": "虚拟项目中止",
+          "steps": [
+            "选择一个虚拟项目",
+            "点击中止",
+            "填写中止原因",
+            "提交",
+            "验证项目状态变为aborted"
+          ],
+          "passes": false
+        },
+        {
+          "id": "proj-005",
+          "description": "删除项目",
+          "steps": [
+            "选择一个pending状态的实体项目",
+            "点击删除",
+            "确认删除",
+            "验证项目被删除"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "合同管理",
+      "features": [
+        {
+          "id": "contract-001",
+          "description": "创建收入合同",
+          "steps": [
+            "进入合同管理页面",
+            "点击新建收入合同",
+            "填写合同信息",
+            "提交",
+            "验证合同创建成功，编号格式为 IC+YYMMDD+2位序号"
+          ],
+          "passes": false
+        },
+        {
+          "id": "contract-002",
+          "description": "创建支出合同",
+          "steps": [
+            "点击新建支出合同",
+            "选择关联项目",
+            "填写合同信息",
+            "提交",
+            "验证合同创建成功，编号格式为 EC+YYMMDD+2位序号"
+          ],
+          "passes": false
+        },
+        {
+          "id": "contract-003",
+          "description": "合同审批流程",
+          "steps": [
+            "提交合同审批",
+            "使用财务角色登录审批",
+            "使用法务角色登录审批",
+            "使用总经理角色登录审批",
+            "验证合同状态变为approved"
+          ],
+          "passes": false
+        },
+        {
+          "id": "contract-004",
+          "description": "支出合同超量校验",
+          "steps": [
+            "创建超出采购清单的支出合同",
+            "验证触发超量校验",
+            "提交超量申请",
+            "预算员审批",
+            "验证通过后可继续审批流程"
+          ],
+          "passes": false
+        },
+        {
+          "id": "contract-005",
+          "description": "价格预警",
+          "steps": [
+            "创建单价高于基准价的合同",
+            "验证显示价格预警",
+            "处理预警",
+            "验证预警状态更新"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "采购管理",
+      "features": [
+        {
+          "id": "purchase-001",
+          "description": "创建采购清单",
+          "steps": [
+            "进入采购管理页面",
+            "创建采购清单",
+            "添加物资明细",
+            "保存",
+            "验证清单创建成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "purchase-002",
+          "description": "批量采购",
+          "steps": [
+            "选择合同",
+            "创建批量采购订单",
+            "提交审批",
+            "验证审批流程"
+          ],
+          "passes": false
+        },
+        {
+          "id": "purchase-003",
+          "description": "零星采购",
+          "steps": [
+            "创建零星采购申请",
+            "填写采购原因和物资",
+            "提交审批",
+            "验证审批流程"
+          ],
+          "passes": false
+        },
+        {
+          "id": "purchase-004",
+          "description": "零星采购预警（超1.5%）",
+          "steps": [
+            "累计零星采购超过批量采购1.5%",
+            "验证系统显示预警"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "库存管理",
+      "features": [
+        {
+          "id": "stock-001",
+          "description": "物资入库",
+          "steps": [
+            "进入库存管理页面",
+            "创建入库单",
+            "添加入库物资",
+            "确认入库",
+            "验证库存增加"
+          ],
+          "passes": false
+        },
+        {
+          "id": "stock-002",
+          "description": "物资出库",
+          "steps": [
+            "创建出库领用申请",
+            "审批通过",
+            "生成出库单",
+            "确认出库",
+            "验证库存减少"
+          ],
+          "passes": false
+        },
+        {
+          "id": "stock-003",
+          "description": "物资退库",
+          "steps": [
+            "创建退库单",
+            "选择要退回的物资",
+            "确认退库",
+            "验证库存增加"
+          ],
+          "passes": false
+        },
+        {
+          "id": "stock-004",
+          "description": "库存查询",
+          "steps": [
+            "进入库存查询页面",
+            "查看实时库存",
+            "按物资名称搜索",
+            "验证库存数据正确"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "施工管理",
+      "features": [
+        {
+          "id": "const-001",
+          "description": "里程碑设置",
+          "steps": [
+            "进入施工管理页面",
+            "为项目添加里程碑",
+            "设置计划完成日期",
+            "保存",
+            "验证里程碑创建成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "const-002",
+          "description": "进度填报",
+          "steps": [
+            "选择项目",
+            "填写施工进度",
+            "提交",
+            "验证进度更新"
+          ],
+          "passes": false
+        },
+        {
+          "id": "const-003",
+          "description": "偏差预警",
+          "steps": [
+            "进度落后于计划",
+            "验证系统显示偏差预警"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "竣工管理",
+      "features": [
+        {
+          "id": "comp-001",
+          "description": "劳务结算",
+          "steps": [
+            "进入竣工管理页面",
+            "创建劳务结算单",
+            "填写结算信息",
+            "提交审批",
+            "验证审批流程"
+          ],
+          "passes": false
+        },
+        {
+          "id": "comp-002",
+          "description": "竣工图纸上传",
+          "steps": [
+            "选择项目",
+            "上传竣工图纸",
+            "验证文件上传成功"
+          ],
+          "passes": false
+        },
+        {
+          "id": "comp-003",
+          "description": "文档归档",
+          "steps": [
+            "上传项目文档",
+            "分类归档",
+            "验证文档可检索"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "财务对账",
+      "features": [
+        {
+          "id": "finance-001",
+          "description": "收入对账单自动生成",
+          "steps": [
+            "等待每月25日",
+            "验证系统自动生成收入对账单"
+          ],
+          "passes": false
+        },
+        {
+          "id": "finance-002",
+          "description": "产值确认",
+          "steps": [
+            "打开对账单",
+            "确认产值",
+            "验证累计产值更新"
+          ],
+          "passes": false
+        },
+        {
+          "id": "finance-003",
+          "description": "人工费付款",
+          "steps": [
+            "关联对账单",
+            "创建人工费付款申请",
+            "审批通过",
+            "验证付款状态更新"
+          ],
+          "passes": false
+        },
+        {
+          "id": "finance-004",
+          "description": "材料款付款",
+          "steps": [
+            "关联入库单",
+            "创建材料款付款申请",
+            "审批通过",
+            "验证付款状态更新"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "变更管理",
+      "features": [
+        {
+          "id": "change-001",
+          "description": "超量采购变更申请",
+          "steps": [
+            "进入变更管理页面",
+            "创建超量采购变更",
+            "提交审批",
+            "验证审批流程"
+          ],
+          "passes": false
+        },
+        {
+          "id": "change-002",
+          "description": "新增设备材料申请",
+          "steps": [
+            "创建新增材料申请",
+            "填写材料信息",
+            "提交审批"
+          ],
+          "passes": false
+        },
+        {
+          "id": "change-003",
+          "description": "现场签证",
+          "steps": [
+            "创建现场签证记录",
+            "填写签证内容",
+            "提交审批"
+          ],
+          "passes": false
+        },
+        {
+          "id": "change-004",
+          "description": "甲方需求变更",
+          "steps": [
+            "创建甲方需求变更",
+            "填写变更内容和影响",
+            "提交审批"
+          ],
+          "passes": false
+        }
+      ]
+    },
+    {
+      "name": "系统管理",
+      "features": [
+        {
+          "id": "sys-001",
+          "description": "操作日志查询",
+          "steps": [
+            "进入系统管理页面",
+            "查看操作日志",
+            "按时间范围筛选",
+            "验证日志显示正确"
+          ],
+          "passes": false
+        }
+      ]
+    }
+  ],
+  "statistics": {
+    "totalFeatures": 47,
+    "passedFeatures": 0,
+    "pendingFeatures": 47,
+    "completionRate": "0%"
+  }
+}
