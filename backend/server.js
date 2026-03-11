@@ -63,6 +63,7 @@ const changeRoutes = require('./routes/change');
 const completionRoutes = require('./routes/completion');
 // Task 60: 系统管理 - 审计日志
 const auditRoutes = require('./routes/audit');
+const announcementRoutes = require('./routes/announcement');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/departments', departmentRoutes);
@@ -91,6 +92,7 @@ app.use('/api/construction', constructionRoutes);
 app.use('/api/completion', completionRoutes);
 // Task 60: 系统管理 - 审计日志 API
 app.use('/api/audit', auditRoutes);
+app.use('/api/announcements', announcementRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
