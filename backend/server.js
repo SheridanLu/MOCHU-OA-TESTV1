@@ -48,7 +48,7 @@ const approvalRoutes = require('./routes/approval');
 const contractRoutes = require('./routes/contract');
 const materialRoutes = require('./routes/material');
 const purchaseRoutes = require('./routes/purchase');
-const zeroPurchaseRoutes = require('./routes/zeroPurchase');
+const sporadicPurchaseRoutes = require('./routes/sporadicPurchase');
 const batchPurchaseRoutes = require('./routes/batchPurchase');
 const stockRoutes = require('./routes/stock');
 // Task 45: 收入对账单路由
@@ -78,7 +78,7 @@ app.use('/api/contracts', contractRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/purchase-lists', purchaseRoutes);
 app.use('/api/purchase', purchaseRoutes);
-app.use('/api/zero-purchases', zeroPurchaseRoutes);
+app.use('/api/zero-purchases', sporadicPurchaseRoutes);
 app.use('/api/purchase', batchPurchaseRoutes);
 app.use('/api/stock', stockRoutes);
 // Task 45: 收入对账单 API

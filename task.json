@@ -43,10 +43,10 @@
       "description": "将zeroPurchase重命名为sporadicPurchase，统一命名",
       "category": "重构",
       "priority": "medium",
-      "status": "pending",
-      "assigned": null,
-      "started_at": null,
-      "completed_at": null,
+      "status": "completed",
+      "assigned": "claude",
+      "started_at": "2026-03-11T11:12:00+08:00",
+      "completed_at": "2026-03-11T11:14:00+08:00",
       "error": null
     },
     {
@@ -55,11 +55,11 @@
       "description": "合并finance和cost目录为统一的财务管理模块",
       "category": "重构",
       "priority": "medium",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [1],
-      "assigned": null,
-      "started_at": null,
-      "completed_at": null,
+      "assigned": "claude",
+      "started_at": "2026-03-11T11:14:00+08:00",
+      "completed_at": "2026-03-11T11:18:00+08:00",
       "error": null
     },
     {
@@ -68,11 +68,11 @@
       "description": "创建新的首页，展示业务流程导航和快捷入口",
       "category": "新功能",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [1, 2],
-      "assigned": null,
-      "started_at": null,
-      "completed_at": null,
+      "assigned": "claude",
+      "started_at": "2026-03-11T11:02:00+08:00",
+      "completed_at": "2026-03-11T11:10:00+08:00",
       "error": null
     },
     {
@@ -81,11 +81,11 @@
       "description": "按照新模块结构重构侧边栏菜单",
       "category": "重构",
       "priority": "high",
-      "status": "pending",
+      "status": "completed",
       "depends_on": [5],
-      "assigned": null,
-      "started_at": null,
-      "completed_at": null,
+      "assigned": "claude",
+      "started_at": "2026-03-11T11:02:00+08:00",
+      "completed_at": "2026-03-11T11:10:00+08:00",
       "error": null
     },
     {
@@ -117,9 +117,9 @@
   ],
   "statistics": {
     "total": 8,
-    "pending": 6,
+    "pending": 2,
     "in_progress": 0,
-    "completed": 2,
+    "completed": 6,
     "failed": 0
   }
 }
