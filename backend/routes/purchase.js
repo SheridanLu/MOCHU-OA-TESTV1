@@ -368,8 +368,8 @@ router.post('/:id/items', checkPermission('purchase:edit'), (req, res) => {
       const result = db.prepare(`
         INSERT INTO purchase_list_items (
           purchase_list_id, material_name, specification, unit,
-          quantity, unit_price, total_price, remarks, sort_order
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+          quantity, unit_price, total_price, remarks, sort_order, category
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `).run(
         id,
         material_name.trim(),
@@ -379,7 +379,8 @@ router.post('/:id/items', checkPermission('purchase:edit'), (req, res) => {
         unit_price,
         totalPrice,
         remarks || null,
-        sortOrder
+        sortOrder,
+        category || 'material'
       );
       
       // 更新清单总金额

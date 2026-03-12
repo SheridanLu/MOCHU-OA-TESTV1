@@ -221,9 +221,20 @@ function PurchaseListDetail() {
       render: (_, __, index) => index + 1
     },
     {
+      title: '分类',
+      dataIndex: 'category',
+      key: 'category',
+      width: 80,
+      render: (text) => (
+        <Tag color={text === 'equipment' ? 'blue' : 'green'}>
+          {text === 'equipment' ? '设备' : '材料'}
+        </Tag>
+      )
+    },
+    {
       title: (
         <Space onClick={() => handleSortChange('material_name')} style={{ cursor: 'pointer' }}>
-          材料名称
+          名称
           {sortField === 'material_name' && (
             sortOrder === 'ASC' ? <SortAscendingOutlined /> : <SortDescendingOutlined />
           )}
@@ -231,7 +242,7 @@ function PurchaseListDetail() {
       ),
       dataIndex: 'material_name',
       key: 'material_name',
-      width: 180,
+      width: 160,
       ellipsis: true
     },
     {
@@ -240,7 +251,12 @@ function PurchaseListDetail() {
       key: 'specification',
       width: 120,
       ellipsis: true,
-      render: (text) => text || '-'
+      render: (text, record) => {
+        if (record.category === 'equipment') {
+          return <span style={{color: '#999'}}>-</span>;
+        }
+        return text || '-';
+      }
     },
     {
       title: '单位',
@@ -509,20 +525,35 @@ function PurchaseListDetail() {
             }
           }}
         >
+          <Form.Item
+            name="category"
+            label="分类"
+            initialValue="material"
+            rules={[{ required: true, message: '请选择分类' }]}
+          >
+            <Select placeholder="请选择分类">
+              <Option value="equipment">设备类</Option>
+              <Option value="material">材料类</Option>
+            </Select>
+          </Form.Item>
+          
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="material_name"
-                label="材料名称"
-                rules={[{ required: true, message: '请输入材料名称' }]}
+                label="名称"
+                rules={[{ required: true, message: '请输入名称' }]}
               >
-                <Input placeholder="请输入材料名称" />
+                <Input placeholder="请输入名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="specification"
                 label="规格型号"
+                rules={[
+                  { required: form.getFieldValue('category') === 'material', message: '材料类必须填写规格型号' }
+                ]}
               >
                 <Input placeholder="请输入规格型号" />
               </Form.Item>
@@ -534,8 +565,19 @@ function PurchaseListDetail() {
               <Form.Item
                 name="unit"
                 label="单位"
+                rules={[{ required: true, message: '请输入单位' }]}
               >
-                <Input placeholder="如：件、套、米" />
+                <Select placeholder="请选择单位" allowClear>
+                  <Option value="套">套</Option>
+                  <Option value="台">台</Option>
+                  <Option value="个">个</Option>
+                  <Option value="支">支</Option>
+                  <Option value="件">件</Option>
+                  <Option value="米">米</Option>
+                  <Option value="kg">kg</Option>
+                  <Option value="m²">m²</Option>
+                  <Option value="m³">m³</Option>
+                </Select>
               </Form.Item>
             </Col>
             <Col span={8}>
