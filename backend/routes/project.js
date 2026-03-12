@@ -4,6 +4,9 @@
  */
 
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const { db } = require('../models/database');
 const { getProjectNo, previewProjectNo } = require('../utils/projectNo');
 const { authMiddleware } = require('../middleware/auth');
@@ -20,6 +23,40 @@ const requirePermission = (permission) => {
     next();
   };
 };
+
+// ========================================
+// 文件上传配置 - 中标通知书
+// ========================================
+const bidNoticeDir = path.join(__dirname, '..', 'uploads', 'bid-notices');
+if (!fs.existsSync(bidNoticeDir)) {
+  fs.mkdirSync(bidNoticeDir, { recursive: true });
+}
+
+const bidNoticeStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, bidNoticeDir);
+  },
+  filename: (req, file, cb) => {
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    const ext = path.extname(originalName);
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'bid-notice-' + uniqueSuffix + ext);
+  }
+});
+
+const bidNoticeUpload = multer({
+  storage: bidNoticeStorage,
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['.pdf', '.jpg', '.jpeg', '.png', '.doc', '.docx'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowedTypes.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('只支持 PDF、图片、Word 文档格式'));
+    }
+  }
+});
 
 /**
  * GET /api/projects/cost-targets
@@ -833,8 +870,9 @@ router.get('/stats/overview', authMiddleware, (req, res) => {
 /**
  * POST /api/projects/:id/convert-with-approval
  * 提交虚拟转实体审批申请（采购员→财务→总经理）
+ * 支持上传中标通知书附件
  */
-router.post('/:id/convert-with-approval', authMiddleware, checkPermission('project:convert'), (req, res) => {
+router.post('/:id/convert-with-approval', authMiddleware, checkPermission('project:convert'), bidNoticeUpload.single('bid_notice_file'), (req, res) => {
   const { id } = req.params;
   const {
     bid_notice_no,      // 中标通知书编号（必填）
@@ -847,12 +885,23 @@ router.post('/:id/convert-with-approval', authMiddleware, checkPermission('proje
   } = req.body;
   const userId = req.user?.userId || req.user?.id;
   
+  // 获取上传的文件路径
+  const bid_notice_file = req.file ? `/uploads/bid-notices/${req.file.filename}` : null;
+  
   // 检查项目是否存在且为虚拟项目
   const virtualProject = db.prepare('SELECT * FROM projects WHERE id = ? AND type = ?').get(id, 'virtual');
   if (!virtualProject) {
     return res.status(404).json({
       success: false,
       message: '虚拟项目不存在'
+    });
+  }
+  
+  // 检查项目状态（已中止的项目不能转换）
+  if (virtualProject.status === 'aborted') {
+    return res.status(400).json({
+      success: false,
+      message: '已中止的虚拟项目不能转换为实体项目'
     });
   }
   
@@ -888,15 +937,16 @@ router.post('/:id/convert-with-approval', authMiddleware, checkPermission('proje
   }
   
   const transaction = db.transaction(() => {
-    // 更新虚拟项目状态为"审批中"并保存申请信息
+    // 更新虚拟项目状态为"审批中"并保存申请信息（包括中标通知书附件）
     db.prepare(`
       UPDATE projects SET
         status = 'converting',
         bid_notice_no = ?,
         bid_notice_date = ?,
+        bid_notice_file = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
-    `).run(bid_notice_no.trim(), bid_notice_date, id);
+    `).run(bid_notice_no.trim(), bid_notice_date, bid_notice_file, id);
     
     // 创建审批记录（使用现有的审批流程）
     const approvalResult = db.prepare(`

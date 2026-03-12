@@ -1,0 +1,30 @@
+{
+  "project": "MOCHU-OA-TESTV1",
+  "version": "TESTV9",
+  "description": "补充中标通知书附件上传和已中止项目冻结功能",
+  "created": "2026-03-12",
+  "tasks": [
+    {
+      "id": 1,
+      "title": "中标通知书附件上传",
+      "description": "虚拟转实体时上传中标通知书文件",
+      "status": "in_progress",
+      "priority": "high",
+      "started_at": "2026-03-12T10:13:00+08:00"
+    },
+    {
+      "id": 2,
+      "title": "已中止项目冻结",
+      "description": "禁止对已中止虚拟项目进行操作",
+      "status": "pending",
+      "priority": "high"
+    },
+    {
+      "id": 3,
+      "title": "前端适配",
+      "description": "前端添加附件上传组件和冻结状态显示",
+      "status": "pending",
+      "priority": "medium"
+    }
+  ]
+}

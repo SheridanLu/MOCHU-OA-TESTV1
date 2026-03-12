@@ -26,7 +26,8 @@ import {
   Badge,
   Tabs,
   Divider,
-  Descriptions
+  Descriptions,
+  Upload
 } from 'antd';
 import {
   SearchOutlined,
@@ -38,7 +39,8 @@ import {
   AuditOutlined,
   StopOutlined,
   SwapRightOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  UploadOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -205,6 +207,11 @@ function ProjectList() {
 
   // 打开编辑弹窗
   const handleEdit = (project) => {
+    // 检查是否已中止
+    if (project.status === 'aborted') {
+      message.warning('该项目已中止，无法编辑');
+      return;
+    }
     setCurrentProject(project);
     editForm.setFieldsValue({
       name: project.name,
@@ -296,6 +303,11 @@ function ProjectList() {
 
   // 删除项目
   const handleDelete = async (project) => {
+    // 检查是否已中止
+    if (project.status === 'aborted') {
+      message.warning('该项目已中止，无法删除');
+      return;
+    }
     try {
       const response = await fetch(`${API_BASE}/projects/${project.id}`, {
         method: 'DELETE',
@@ -327,6 +339,11 @@ function ProjectList() {
 
   // 打开虚拟项目转换弹窗
   const openConvertModal = (project) => {
+    // 检查是否已中止
+    if (project.status === 'aborted') {
+      message.warning('该项目已中止，无法转换');
+      return;
+    }
     setConvertingProject(project);
     convertForm.resetFields();
     convertForm.setFieldsValue({
@@ -335,24 +352,37 @@ function ProjectList() {
     setConvertVisible(true);
   };
 
-  // 执行虚拟项目转换（带审批流程）
+  // 执行虚拟项目转换（带审批流程+文件上传）
   const handleConvert = async () => {
     try {
       const values = await convertForm.validateFields();
       setSubmitting(true);
 
-      const data = {
-        bid_notice_no: values.bid_notice_no,
-        bid_notice_date: values.bid_notice_date?.format('YYYY-MM-DD'),
-        contract_amount: values.contract_amount,
-        start_date: values.date_range?.[0]?.format('YYYY-MM-DD'),
-        end_date: values.date_range?.[1]?.format('YYYY-MM-DD')
-      };
+      // 使用 FormData 支持文件上传
+      const formData = new FormData();
+      formData.append('bid_notice_no', values.bid_notice_no);
+      formData.append('bid_notice_date', values.bid_notice_date?.format('YYYY-MM-DD'));
+      if (values.contract_amount) {
+        formData.append('contract_amount', values.contract_amount);
+      }
+      if (values.start_date) {
+        formData.append('start_date', values.start_date?.format('YYYY-MM-DD'));
+      }
+      if (values.end_date) {
+        formData.append('end_date', values.end_date?.format('YYYY-MM-DD'));
+      }
+      // 如果有上传文件
+      if (values.bid_notice_file && values.bid_notice_file.file) {
+        formData.append('bid_notice_file', values.bid_notice_file.file.originFileObj);
+      }
 
+      const token = localStorage.getItem('token');
       const response = await fetch(`${API_BASE}/projects/${convertingProject.id}/convert-with-approval`, {
         method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(data)
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
 
       const result = await response.json();
@@ -941,6 +971,33 @@ function ProjectList() {
                 rules={[{ required: true, message: '请选择中标日期' }]}
               >
                 <DatePicker style={{ width: '100%' }} placeholder="请选择中标日期" />
+              </Form.Item>
+
+              <Form.Item
+                name="bid_notice_file"
+                label="中标通知书附件"
+                extra="支持 PDF、图片、Word 文档，最大 10MB"
+              >
+                <Upload
+                  name="bid_notice_file"
+                  action={`${API_BASE}/projects/upload/bid-notice`}
+                  headers={{ Authorization: `Bearer ${localStorage.getItem('token')}` }}
+                  accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                  maxCount={1}
+                  onChange={(info) => {
+                    if (info.file.status === 'done') {
+                      message.success('文件上传成功');
+                      // 保存文件路径到表单
+                      convertForm.setFieldsValue({
+                        bid_notice_file_path: info.file.response?.path
+                      });
+                    } else if (info.file.status === 'error') {
+                      message.error('文件上传失败');
+                    }
+                  }}
+                >
+                  <Button icon={<UploadOutlined />}>上传中标通知书</Button>
+                </Upload>
               </Form.Item>
 
               <Form.Item
