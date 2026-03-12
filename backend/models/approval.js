@@ -440,6 +440,89 @@ function getPendingApprovals(roleCodes, options = {}) {
 }
 
 /**
+ * 获取零星采购待审批列表
+ * @param {Array} roleCodes - 用户角色代码数组
+ * @param {Object} options - 分页选项
+ * @returns {Object} 待审批列表和总数
+ */
+function getSporadicPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  // 查询待审批的零星采购
+  let sql = `
+    SELECT 
+      sp.id,
+      sp.sporadic_no,
+      sp.project_id,
+      sp.reason,
+      sp.status,
+      sp.total_amount,
+      sp.approval_step,
+      sp.current_approver,
+      sp.creator_id,
+      sp.created_at,
+      sp.updated_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as creator_name,
+      'sporadic' as approval_type,
+      spa.step_name as current_step_name,
+      spa.role as required_role
+    FROM sporadic_purchases sp
+    LEFT JOIN projects p ON sp.project_id = p.id
+    LEFT JOIN users u ON sp.creator_id = u.id
+    INNER JOIN sporadic_purchase_approvals spa ON sp.id = spa.sporadic_id
+      AND spa.step = sp.approval_step
+      AND spa.role IN (${rolePlaceholders})
+      AND spa.action IS NULL
+    WHERE sp.status = 'pending'
+  `;
+
+  const params = [...roleArray];
+
+  // 获取总数
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  // 分页查询
+  sql += ' ORDER BY sp.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  // 获取审批流程信息
+  const listWithFlows = list.map(item => {
+    const flows = db.prepare(`
+      SELECT step, step_name, role, action, comment, approver_id, created_at, updated_at
+      FROM sporadic_purchase_approvals
+      WHERE sporadic_id = ?
+      ORDER BY step
+    `).all(item.id);
+    
+    return {
+      ...item,
+      total_amount: parseFloat(item.total_amount) || 0,
+      flows: flows.map(f => ({
+        ...f,
+        status: f.action === 'approve' ? 'approved' : f.action === 'reject' ? 'rejected' : 'pending'
+      }))
+    };
+  });
+
+  return {
+    list: listWithFlows,
+    total,
+    page: parseInt(page),
+    pageSize: parseInt(pageSize)
+  };
+}
+
+/**
  * 检查用户是否有权限审批
  * @param {number} approvalId - 审批ID
  * @param {number} userId - 用户ID
@@ -487,6 +570,7 @@ module.exports = {
   approveApproval,
   rejectApproval,
   getPendingApprovals,
+  getSporadicPendingApprovals,
   canUserApprove,
   ApprovalStatus,
   ApprovalNodeStatus,

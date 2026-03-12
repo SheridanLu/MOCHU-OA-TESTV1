@@ -237,17 +237,31 @@ function ApprovalList() {
   // 待审批表格列定义
   const pendingColumns = [
     {
-      title: '项目编号',
+      title: '类型',
+      dataIndex: 'source_name',
+      key: 'source_name',
+      width: 90,
+      render: (text, record) => (
+        <Tag color={record.approval_source === 'sporadic' ? 'purple' : 'blue'}>
+          {text || '项目立项'}
+        </Tag>
+      )
+    },
+    {
+      title: '编号',
       dataIndex: 'project_no',
       key: 'project_no',
       width: 140,
-      render: (text) => <Tag color="blue">{text}</Tag>
+      render: (text, record) => (
+        <Tag color="blue">{text || record.sporadic_no}</Tag>
+      )
     },
     {
-      title: '项目名称',
+      title: '名称/事由',
       dataIndex: 'project_name',
       key: 'project_name',
-      ellipsis: true
+      ellipsis: true,
+      render: (text, record) => text || record.reason || '-'
     },
     {
       title: '客户',
@@ -258,28 +272,31 @@ function ApprovalList() {
       render: (text) => text || '-'
     },
     {
-      title: '合同金额',
+      title: '金额',
       dataIndex: 'contract_amount',
       key: 'contract_amount',
       width: 120,
-      render: (amount) => `¥${(amount || 0).toLocaleString()}`
+      render: (amount, record) => {
+        const val = amount || record.total_amount || 0;
+        return `¥${val.toLocaleString()}`;
+      }
     },
     {
       title: '提交人',
       dataIndex: 'submitter_name',
       key: 'submitter_name',
-      width: 100
+      width: 100,
+      render: (text, record) => text || record.creator_name || '-'
     },
     {
       title: '当前步骤',
       dataIndex: 'current_step',
       key: 'current_step',
-      width: 100,
-      render: (step) => (
-        <Tag color={step === 1 ? 'orange' : 'blue'}>
-          {step === 1 ? '财务审批' : '总经理审批'}
-        </Tag>
-      )
+      width: 120,
+      render: (step, record) => {
+        const stepName = record.current_step_name || (step === 1 ? '财务审批' : '总经理审批');
+        return <Tag color={step === 1 ? 'orange' : 'blue'}>{stepName}</Tag>;
+      }
     },
     {
       title: '提交时间',

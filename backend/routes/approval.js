@@ -15,6 +15,7 @@ const {
   approveApproval,
   rejectApproval,
   getPendingApprovals,
+  getSporadicPendingApprovals,
   canUserApprove,
   ApprovalStatus
 } = require('../models/approval');
@@ -81,7 +82,7 @@ router.get('/pending', (req, res) => {
     }
 
     // 只有财务和总经理角色可以查看待审批列表
-    const approvalRoles = roleCodes.filter(r => ['FINANCE', 'GM'].includes(r));
+    const approvalRoles = roleCodes.filter(r => ['FINANCE', 'GM', 'BUDGET'].includes(r));
     if (approvalRoles.length === 0) {
       return res.status(403).json({
         success: false,
@@ -90,11 +91,39 @@ router.get('/pending', (req, res) => {
     }
 
     const { page = 1, pageSize = 10 } = req.query;
-    const result = getPendingApprovals(approvalRoles, { page, pageSize });
+    
+    // 获取项目审批列表
+    const projectResult = getPendingApprovals(approvalRoles, { page, pageSize });
+    
+    // 获取零星采购审批列表
+    const sporadicResult = getSporadicPendingApprovals(approvalRoles, { page, pageSize });
+    
+    // 合并结果
+    const allList = [
+      ...projectResult.list.map(item => ({ ...item, approval_source: 'project', source_name: '项目立项' })),
+      ...sporadicResult.list.map(item => ({ ...item, approval_source: 'sporadic', source_name: '零星采购' }))
+    ];
+    
+    // 按创建时间排序
+    allList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    
+    // 分页
+    const total = projectResult.total + sporadicResult.total;
+    const startIndex = (parseInt(page) - 1) * parseInt(pageSize);
+    const paginatedList = allList.slice(startIndex, startIndex + parseInt(pageSize));
 
     res.json({
       success: true,
-      data: result
+      data: {
+        list: paginatedList,
+        total,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+        stats: {
+          project: projectResult.total,
+          sporadic: sporadicResult.total
+        }
+      }
     });
   } catch (error) {
     console.error('获取待审批列表失败:', error);
