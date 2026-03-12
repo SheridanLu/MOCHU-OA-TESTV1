@@ -279,6 +279,14 @@ function PriceLibrary() {
       )
     },
     {
+      title: '税率',
+      dataIndex: 'tax_rate',
+      key: 'tax_rate',
+      width: 80,
+      align: 'center',
+      render: (value) => `${value || 13}%`
+    },
+    {
       title: '生效日期',
       dataIndex: 'effective_date',
       key: 'effective_date',
@@ -564,7 +572,7 @@ function PriceLibrary() {
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={12}>
+            <Col span={8}>
               <Form.Item
                 name="base_price"
                 label="价格(元)"
@@ -580,6 +588,21 @@ function PriceLibrary() {
                   min={0}
                   prefix="¥"
                 />
+              </Form.Item>
+            </Col>
+            <Col span={4}>
+              <Form.Item
+                name="tax_rate"
+                label="税率(%)"
+                initialValue={13}
+              >
+                <Select placeholder="税率">
+                  <Option value={1}>1%</Option>
+                  <Option value={3}>3%</Option>
+                  <Option value={6}>6%</Option>
+                  <Option value={9}>9%</Option>
+                  <Option value={13}>13%</Option>
+                </Select>
               </Form.Item>
             </Col>
           </Row>

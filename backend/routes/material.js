@@ -118,7 +118,8 @@ router.post('/', checkPermission('material:create'), (req, res) => {
     expiry_date,
     supplier_id,
     remarks,
-    category
+    category,
+    tax_rate
   } = req.body;
   
   // 验证必填字段
@@ -164,8 +165,8 @@ router.post('/', checkPermission('material:create'), (req, res) => {
       INSERT INTO material_base_prices (
         material_name, specification, unit, base_price,
         effective_date, expiry_date, supplier_id, remarks,
-        created_by, status, category
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
+        created_by, status, category, tax_rate
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)
     `).run(
       material_name.trim(),
       specification || null,
@@ -176,7 +177,8 @@ router.post('/', checkPermission('material:create'), (req, res) => {
       supplier_id || null,
       remarks || null,
       userId,
-      category || 'material'
+      category || 'material',
+      tax_rate || 13
     );
     
     const newMaterial = db.prepare(`
@@ -212,7 +214,9 @@ router.put('/:id', checkPermission('material:edit'), (req, res) => {
     expiry_date,
     supplier_id,
     remarks,
-    status
+    status,
+    category,
+    tax_rate
   } = req.body;
   
   // 检查材料是否存在
@@ -250,11 +254,12 @@ router.put('/:id', checkPermission('material:edit'), (req, res) => {
           remarks = COALESCE(?, remarks),
           status = COALESCE(?, status),
           category = COALESCE(?, category),
+          tax_rate = COALESCE(?, tax_rate),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `).run(
         material_name, specification, unit, base_price,
-        effective_date, expiry_date, supplier_id, remarks, status, category, id
+        effective_date, expiry_date, supplier_id, remarks, status, category, tax_rate, id
       );
     });
     
