@@ -282,40 +282,6 @@ function PurchaseListDetail() {
       render: (value) => parseFloat(value).toLocaleString()
     },
     {
-      title: (
-        <Space onClick={() => handleSortChange('unit_price')} style={{ cursor: 'pointer' }}>
-          单价
-          {sortField === 'unit_price' && (
-            sortOrder === 'ASC' ? <SortAscendingOutlined /> : <SortDescendingOutlined />
-          )}
-        </Space>
-      ),
-      dataIndex: 'unit_price',
-      key: 'unit_price',
-      width: 120,
-      align: 'right',
-      render: (value) => `¥${parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-    },
-    {
-      title: (
-        <Space onClick={() => handleSortChange('total_price')} style={{ cursor: 'pointer' }}>
-          金额
-          {sortField === 'total_price' && (
-            sortOrder === 'ASC' ? <SortAscendingOutlined /> : <SortDescendingOutlined />
-          )}
-        </Space>
-      ),
-      dataIndex: 'total_price',
-      key: 'total_price',
-      width: 130,
-      align: 'right',
-      render: (value) => (
-        <span style={{ fontWeight: 500, color: '#1890ff' }}>
-          ¥{parseFloat(value).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-        </span>
-      )
-    },
-    {
       title: '备注',
       dataIndex: 'remarks',
       key: 'remarks',
@@ -481,13 +447,7 @@ function PurchaseListDetail() {
                   <Table.Summary.Cell index={1} align="right">
                     <strong>{parseFloat(summary.total_quantity).toLocaleString()}</strong>
                   </Table.Summary.Cell>
-                  <Table.Summary.Cell index={2} />
-                  <Table.Summary.Cell index={3} align="right">
-                    <strong style={{ color: '#1890ff', fontSize: 16 }}>
-                      ¥{parseFloat(summary.total_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </strong>
-                  </Table.Summary.Cell>
-                  <Table.Summary.Cell index={4} colSpan={3} />
+                  <Table.Summary.Cell index={2} colSpan={4} />
                 </Table.Summary.Row>
               </Table.Summary>
             );
@@ -597,33 +557,7 @@ function PurchaseListDetail() {
                 />
               </Form.Item>
             </Col>
-            <Col span={8}>
-              <Form.Item
-                name="unit_price"
-                label="单价"
-                rules={[
-                  { required: true, message: '请输入单价' },
-                  { type: 'number', min: 0, message: '单价不能为负' }
-                ]}
-              >
-                <InputNumber
-                  style={{ width: '100%' }}
-                  min={0}
-                  precision={2}
-                  prefix="¥"
-                  placeholder="请输入单价"
-                />
-              </Form.Item>
-            </Col>
           </Row>
-          
-          <Form.Item label="金额">
-            <Input
-              value={`¥${calculateAmount()}`}
-              disabled
-              style={{ fontWeight: 600, color: '#1890ff' }}
-            />
-          </Form.Item>
           
           <Form.Item
             name="remarks"
