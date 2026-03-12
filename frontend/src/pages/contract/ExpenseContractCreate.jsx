@@ -975,6 +975,12 @@ function ExpenseContractCreate() {
             </Col>
           </Row>
           <Form.Item
+            name="contact_region"
+            label="联系人负责区域"
+          >
+            <Input placeholder="请输入联系人负责区域" />
+          </Form.Item>
+          <Form.Item
             name="email"
             label="邮箱"
           >

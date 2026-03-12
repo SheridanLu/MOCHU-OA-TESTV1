@@ -1182,7 +1182,8 @@ router.post('/suppliers', checkPermission('supplier:create'), (req, res) => {
     email,
     address,
     bank_name,
-    bank_account
+    bank_account,
+    contact_region
   } = req.body;
 
   if (!name || !name.trim()) {
@@ -1194,9 +1195,9 @@ router.post('/suppliers', checkPermission('supplier:create'), (req, res) => {
 
   try {
     const result = db.prepare(`
-      INSERT INTO suppliers (name, contact_person, phone, email, address, bank_name, bank_account)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).run(name.trim(), contact_person, phone, email, address, bank_name, bank_account);
+      INSERT INTO suppliers (name, contact_person, phone, email, address, bank_name, bank_account, contact_region)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(name.trim(), contact_person, phone, email, address, bank_name, bank_account, contact_region);
 
     const newSupplier = db.prepare('SELECT * FROM suppliers WHERE id = ?').get(result.lastInsertRowid);
 
