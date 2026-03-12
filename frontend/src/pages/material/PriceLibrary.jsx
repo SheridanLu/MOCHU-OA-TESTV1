@@ -229,19 +229,35 @@ function PriceLibrary() {
       render: (_, __, index) => (pagination.current - 1) * pagination.pageSize + index + 1
     },
     {
-      title: '材料名称',
+      title: '分类',
+      dataIndex: 'category',
+      key: 'category',
+      width: 80,
+      render: (text) => (
+        <Tag color={text === 'equipment' ? 'blue' : 'green'}>
+          {text === 'equipment' ? '设备类' : '材料类'}
+        </Tag>
+      )
+    },
+    {
+      title: '名称',
       dataIndex: 'material_name',
       key: 'material_name',
-      width: 180,
+      width: 160,
       ellipsis: true
     },
     {
       title: '规格型号',
       dataIndex: 'specification',
       key: 'specification',
-      width: 150,
+      width: 140,
       ellipsis: true,
-      render: (text) => text || '-'
+      render: (text, record) => {
+        if (record.category === 'equipment') {
+          return <span style={{color: '#999'}}>-</span>;
+        }
+        return text || '-';
+      }
     },
     {
       title: '单位',
@@ -251,7 +267,7 @@ function PriceLibrary() {
       align: 'center'
     },
     {
-      title: '基准价(元)',
+      title: '价格(元)',
       dataIndex: 'base_price',
       key: 'base_price',
       width: 120,
@@ -498,20 +514,37 @@ function PriceLibrary() {
           layout="vertical"
           preserve={false}
         >
+          <Form.Item
+            name="category"
+            label="分类"
+            initialValue="material"
+            rules={[{ required: true, message: '请选择分类' }]}
+          >
+            <Select placeholder="请选择分类" onChange={(val) => {
+              // 设备类时规格型号可选，材料类时必填
+              form.setFieldsValue({ specification: '' });
+            }}>
+              <Option value="equipment">设备类</Option>
+              <Option value="material">材料类</Option>
+            </Select>
+          </Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
                 name="material_name"
-                label="材料名称"
-                rules={[{ required: true, message: '请输入材料名称' }]}
+                label="名称"
+                rules={[{ required: true, message: '请输入名称' }]}
               >
-                <Input placeholder="请输入材料名称" />
+                <Input placeholder="请输入名称" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="specification"
                 label="规格型号"
+                rules={[
+                  { required: form.getFieldValue('category') === 'material', message: '材料类必须填写规格型号' }
+                ]}
               >
                 <Input placeholder="请输入规格型号" />
               </Form.Item>
@@ -522,6 +555,7 @@ function PriceLibrary() {
               <Form.Item
                 name="unit"
                 label="单位"
+                rules={[{ required: true, message: '请选择单位' }]}
               >
                 <Select placeholder="请选择单位" allowClear>
                   {UNITS.map(u => (
@@ -533,14 +567,14 @@ function PriceLibrary() {
             <Col span={12}>
               <Form.Item
                 name="base_price"
-                label="基准价(元)"
+                label="价格(元)"
                 rules={[
-                  { required: true, message: '请输入基准价' },
-                  { type: 'number', min: 0.01, message: '基准价必须大于0' }
+                  { required: true, message: '请输入价格' },
+                  { type: 'number', min: 0.01, message: '价格必须大于0' }
                 ]}
               >
                 <InputNumber
-                  placeholder="请输入基准价"
+                  placeholder="请输入价格"
                   style={{ width: '100%' }}
                   precision={2}
                   min={0}

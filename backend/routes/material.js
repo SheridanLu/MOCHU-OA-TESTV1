@@ -117,21 +117,30 @@ router.post('/', checkPermission('material:create'), (req, res) => {
     effective_date,
     expiry_date,
     supplier_id,
-    remarks
+    remarks,
+    category
   } = req.body;
   
   // 验证必填字段
   if (!material_name || !material_name.trim()) {
     return res.status(400).json({
       success: false,
-      message: '材料名称不能为空'
+      message: '名称不能为空'
+    });
+  }
+  
+  // 材料类必须填写规格型号
+  if (category === 'material' && !specification) {
+    return res.status(400).json({
+      success: false,
+      message: '材料类必须填写规格型号'
     });
   }
   
   if (!base_price || base_price <= 0) {
     return res.status(400).json({
       success: false,
-      message: '基准价必须大于0'
+      message: '价格必须大于0'
     });
   }
   
@@ -155,8 +164,8 @@ router.post('/', checkPermission('material:create'), (req, res) => {
       INSERT INTO material_base_prices (
         material_name, specification, unit, base_price,
         effective_date, expiry_date, supplier_id, remarks,
-        created_by, status
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        created_by, status, category
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?)
     `).run(
       material_name.trim(),
       specification || null,
@@ -166,7 +175,8 @@ router.post('/', checkPermission('material:create'), (req, res) => {
       expiry_date || null,
       supplier_id || null,
       remarks || null,
-      userId
+      userId,
+      category || 'material'
     );
     
     const newMaterial = db.prepare(`
@@ -239,11 +249,12 @@ router.put('/:id', checkPermission('material:edit'), (req, res) => {
           supplier_id = COALESCE(?, supplier_id),
           remarks = COALESCE(?, remarks),
           status = COALESCE(?, status),
+          category = COALESCE(?, category),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `).run(
         material_name, specification, unit, base_price,
-        effective_date, expiry_date, supplier_id, remarks, status, id
+        effective_date, expiry_date, supplier_id, remarks, status, category, id
       );
     });
     
