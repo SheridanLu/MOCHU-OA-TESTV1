@@ -33,15 +33,16 @@ initApprovalTables();
  * @returns {string|null} 角色编码
  */
 function getUserRoleCode(userId) {
-  const result = db.prepare(`
+  // 获取用户所有角色
+  const results = db.prepare(`
     SELECT r.code
     FROM user_roles ur
     JOIN roles r ON ur.role_id = r.id
     WHERE ur.user_id = ?
-    LIMIT 1
-  `).get(userId);
+  `).all(userId);
   
-  return result ? result.code : null;
+  // 返回角色代码数组
+  return results.map(r => r.code);
 }
 
 /**
@@ -71,8 +72,8 @@ router.get('/pending', (req, res) => {
       });
     }
 
-    const roleCode = getUserRoleCode(userId);
-    if (!roleCode) {
+    const roleCodes = getUserRoleCode(userId);
+    if (!roleCodes || roleCodes.length === 0) {
       return res.status(403).json({
         success: false,
         message: '您没有审批权限'
@@ -80,7 +81,8 @@ router.get('/pending', (req, res) => {
     }
 
     // 只有财务和总经理角色可以查看待审批列表
-    if (!['FINANCE', 'GM'].includes(roleCode)) {
+    const approvalRoles = roleCodes.filter(r => ['FINANCE', 'GM'].includes(r));
+    if (approvalRoles.length === 0) {
       return res.status(403).json({
         success: false,
         message: '您没有审批权限'
@@ -88,7 +90,7 @@ router.get('/pending', (req, res) => {
     }
 
     const { page = 1, pageSize = 10 } = req.query;
-    const result = getPendingApprovals(roleCode, { page, pageSize });
+    const result = getPendingApprovals(approvalRoles, { page, pageSize });
 
     res.json({
       success: true,

@@ -379,9 +379,13 @@ function rejectApproval(approvalId, approverId, comment = '') {
  * @param {Object} options - 分页选项
  * @returns {Object} 待审批列表和总数
  */
-function getPendingApprovals(roleCode, options = {}) {
+function getPendingApprovals(roleCodes, options = {}) {
   const { page = 1, pageSize = 10 } = options;
   const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  // 支持多角色查询
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
 
   // 查找当前步骤需要该角色审批的待审批记录
   let sql = `
@@ -399,12 +403,12 @@ function getPendingApprovals(roleCode, options = {}) {
     LEFT JOIN users u ON a.submitter_id = u.id
     INNER JOIN approval_flows af ON a.id = af.approval_id 
       AND af.step = a.current_step 
-      AND af.role = ? 
+      AND af.role IN (${rolePlaceholders})
       AND af.status = 'pending'
     WHERE a.status IN ('pending', 'finance_approved')
   `;
 
-  const params = [roleCode];
+  const params = [...roleArray];
 
   // 获取总数
   const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
