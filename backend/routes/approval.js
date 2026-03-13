@@ -63,9 +63,10 @@ function getUserRoleCode(userId) {
  * @returns {boolean}
  */
 function isPurchaser(userId) {
-  const roleCode = getUserRoleCode(userId);
-  // 采购员、项目经理、基础业务、软件业务都可以提交
-  return ['PURCHASE', 'PROJ_MGR', 'BASE', 'SOFTWARE', 'GM'].includes(roleCode);
+  const roleCodes = getUserRoleCode(userId);
+  // 采购员、项目经理、基础业务、软件业务、总经理都可以提交
+  const allowedRoles = ['PURCHASE', 'PROJ_MGR', 'BASE', 'SOFTWARE', 'GM'];
+  return roleCodes.some(role => allowedRoles.includes(role));
 }
 
 /**
