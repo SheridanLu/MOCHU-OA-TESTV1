@@ -27,7 +27,8 @@ import {
   Tabs,
   Divider,
   Descriptions,
-  Upload
+  Upload,
+  Steps
 } from 'antd';
 import {
   SearchOutlined,
@@ -40,7 +41,10 @@ import {
   StopOutlined,
   SwapRightOutlined,
   FileTextOutlined,
-  UploadOutlined
+  UploadOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
@@ -457,17 +461,31 @@ function ProjectList() {
     }
   };
 
-  // 提交项目立项审批
-  const handleSubmitApproval = async (project) => {
+  // 提交审批确认弹窗
+  const [approvalConfirmVisible, setApprovalConfirmVisible] = useState(false);
+  const [pendingApprovalProject, setPendingApprovalProject] = useState(null);
+
+  // 打开提交审批确认弹窗
+  const openApprovalConfirm = (project) => {
+    setPendingApprovalProject(project);
+    setApprovalConfirmVisible(true);
+  };
+
+  // 确认提交审批
+  const confirmSubmitApproval = async () => {
+    if (!pendingApprovalProject) return;
+    
     try {
       setSubmitting(true);
-      const response = await fetch(`${API_BASE}/approval/project/${project.id}/submit`, {
+      const response = await fetch(`${API_BASE}/approval/project/${pendingApprovalProject.id}/submit`, {
         method: 'POST',
         headers: getAuthHeaders()
       });
       const result = await response.json();
       if (result.success) {
         message.success('项目已提交审批');
+        setApprovalConfirmVisible(false);
+        setPendingApprovalProject(null);
         loadProjects();
       } else {
         message.error(result.message || '提交失败');
@@ -663,7 +681,7 @@ function ProjectList() {
                     type="link"
                     size="small"
                     icon={<AuditOutlined />}
-                    onClick={() => handleSubmitApproval(record)}
+                    onClick={() => openApprovalConfirm(record)}
                   >
                     提交审批
                   </Button>
@@ -1282,6 +1300,112 @@ function ProjectList() {
               </Descriptions.Item>
             )}
           </Descriptions>
+        )}
+      </Modal>
+
+      {/* 提交审批确认弹窗 */}
+      <Modal
+        title={
+          <Space>
+            <AuditOutlined style={{ color: '#1890ff' }} />
+            <span>提交项目立项审批</span>
+          </Space>
+        }
+        open={approvalConfirmVisible}
+        onOk={confirmSubmitApproval}
+        onCancel={() => {
+          setApprovalConfirmVisible(false);
+          setPendingApprovalProject(null);
+        }}
+        confirmLoading={submitting}
+        okText="确认提交"
+        cancelText="取消"
+        width={700}
+      >
+        {pendingApprovalProject && (
+          <>
+            <div style={{
+              padding: '12px 16px',
+              background: '#e6f7ff',
+              borderRadius: 4,
+              marginBottom: 16
+            }}>
+              <Descriptions column={2} size="small">
+                <Descriptions.Item label="项目编号">
+                  <Tag color="blue">{pendingApprovalProject.project_no}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="项目名称">
+                  {pendingApprovalProject.name}
+                </Descriptions.Item>
+                <Descriptions.Item label="客户">
+                  {pendingApprovalProject.customer || '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="合同金额">
+                  ¥{(pendingApprovalProject.contract_amount || 0).toLocaleString()}
+                </Descriptions.Item>
+              </Descriptions>
+            </div>
+
+            <div style={{ marginTop: 16 }}>
+              <h4 style={{ marginBottom: 12 }}>
+                <AuditOutlined style={{ marginRight: 8 }} />
+                审批流程
+              </h4>
+              <Steps
+                direction="vertical"
+                size="small"
+                items={[
+                  {
+                    title: '第一步：财务审批',
+                    description: (
+                      <div style={{ padding: '8px 12px', background: '#fafafa', borderRadius: 4 }}>
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div>
+                            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                            <span style={{ color: '#52c41a' }}>同意</span>
+                            <span style={{ marginLeft: 16, color: '#999' }}>- 项目通过，流转至下一审批人</span>
+                          </div>
+                          <div>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                            <span style={{ color: '#ff4d4f' }}>不同意</span>
+                            <span style={{ marginLeft: 16, color: '#999' }}>- 需填写不同意原因，项目退回</span>
+                          </div>
+                        </Space>
+                      </div>
+                    ),
+                    status: 'process'
+                  },
+                  {
+                    title: '第二步：总经理审批',
+                    description: (
+                      <div style={{ padding: '8px 12px', background: '#fafafa', borderRadius: 4 }}>
+                        <Space direction="vertical" style={{ width: '100%' }}>
+                          <div>
+                            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                            <span style={{ color: '#52c41a' }}>同意</span>
+                            <span style={{ marginLeft: 16, color: '#999' }}>- 项目正式立项生效</span>
+                          </div>
+                          <div>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                            <span style={{ color: '#ff4d4f' }}>不同意</span>
+                            <span style={{ marginLeft: 16, color: '#999' }}>- 需填写不同意原因，项目退回</span>
+                          </div>
+                        </Space>
+                      </div>
+                    ),
+                    status: 'wait'
+                  }
+                ]}
+              />
+            </div>
+
+            <div style={{ marginTop: 16, padding: '12px', background: '#fff7e6', borderRadius: 4 }}>
+              <ExclamationCircleOutlined style={{ color: '#fa8c16', marginRight: 8 }} />
+              <span style={{ color: '#d48806' }}>
+                提交后项目将进入审批流程，审批期间无法编辑和删除
+              </span>
+            </div>
+          </>
         )}
       </Modal>
     </div>
