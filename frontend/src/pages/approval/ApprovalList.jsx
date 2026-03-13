@@ -179,17 +179,62 @@ function ApprovalList() {
     
     setSubmitting(true);
     try {
-      const result = await approvalService.approveProject(
-        currentApproval.project_id,
-        comment
-      );
-      if (result.data.success) {
-        message.success('审批通过');
+      let result;
+      
+      // 根据审批来源调用不同的API
+      if (currentApproval.approval_source === 'project') {
+        // 项目立项审批
+        result = await approvalService.approveProject(
+          currentApproval.project_id,
+          comment
+        );
+      } else if (currentApproval.approval_source === 'sporadic') {
+        // 零星采购审批
+        const response = await fetch(`${API_BASE}/purchase/sporadic/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (currentApproval.approval_source === 'purchase_list') {
+        // 采购清单审批
+        const response = await fetch(`${API_BASE}/purchase-lists/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (currentApproval.type === 'virtual_convert') {
+        // 虚拟转实体审批
+        const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-conversion`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ approve: true, comment })
+        });
+        result = { data: await response.json() };
+      } else if (currentApproval.type === 'virtual_abort') {
+        // 虚拟中止审批
+        const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-abort`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ approve: true, comment })
+        });
+        result = { data: await response.json() };
+      } else {
+        // 默认使用项目审批API
+        result = await approvalService.approveProject(
+          currentApproval.project_id,
+          comment
+        );
+      }
+      
+      if (result.data?.success) {
+        message.success(result.data.message || '审批通过');
         setApproveVisible(false);
         loadPendingList();
         loadMyApproved();
       } else {
-        message.error(result.data.message || '审批失败');
+        message.error(result.data?.message || '审批失败');
       }
     } catch (error) {
       message.error(error.response?.data?.message || '审批失败');
@@ -209,10 +254,48 @@ function ApprovalList() {
     
     setSubmitting(true);
     try {
-      const result = await approvalService.rejectProject(
-        currentApproval.project_id,
-        comment
-      );
+      let result;
+      
+      // 根据审批来源调用不同的API
+      if (currentApproval.approval_source === 'project') {
+        result = await approvalService.rejectProject(
+          currentApproval.project_id,
+          comment
+        );
+      } else if (currentApproval.approval_source === 'sporadic') {
+        const response = await fetch(`${API_BASE}/purchase/sporadic/${currentApproval.id}/reject`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (currentApproval.approval_source === 'purchase_list') {
+        const response = await fetch(`${API_BASE}/purchase-lists/${currentApproval.id}/reject`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (currentApproval.type === 'virtual_convert') {
+        const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-conversion`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ approve: false, comment })
+        });
+        result = { data: await response.json() };
+      } else if (currentApproval.type === 'virtual_abort') {
+        const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-abort`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ approve: false, comment })
+        });
+        result = { data: await response.json() };
+      } else {
+        result = await approvalService.rejectProject(
+          currentApproval.project_id,
+          comment
+        );
+      }
       if (result.data.success) {
         message.success('审批已拒绝');
         setRejectVisible(false);
