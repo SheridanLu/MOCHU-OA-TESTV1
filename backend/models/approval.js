@@ -529,7 +529,7 @@ function getSporadicPendingApprovals(roleCodes, options = {}) {
  * @param {string} roleCode - 用户角色编码
  * @returns {boolean} 是否有权限
  */
-function canUserApprove(approvalId, userId, roleCode) {
+function canUserApprove(approvalId, userId, roleCodes) {
   const approval = getApprovalById(approvalId);
   if (!approval) {
     return false;
@@ -547,8 +547,11 @@ function canUserApprove(approvalId, userId, roleCode) {
     return false;
   }
 
+  // 支持 roleCodes 为数组或单个值
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+
   // 检查当前节点是否需要该角色审批
-  if (currentFlow.role !== roleCode) {
+  if (!roleArray.includes(currentFlow.role)) {
     return false;
   }
 
