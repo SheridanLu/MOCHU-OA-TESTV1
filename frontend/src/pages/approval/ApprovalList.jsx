@@ -182,13 +182,15 @@ function ApprovalList() {
       let result;
       
       // 根据审批来源调用不同的API
-      if (currentApproval.approval_source === 'project') {
+      const approvalType = currentApproval.approval_source || currentApproval.approval_type || currentApproval.type;
+      
+      if (approvalType === 'project') {
         // 项目立项审批
         result = await approvalService.approveProject(
           currentApproval.project_id,
           comment
         );
-      } else if (currentApproval.approval_source === 'sporadic') {
+      } else if (approvalType === 'sporadic') {
         // 零星采购审批
         const response = await fetch(`${API_BASE}/purchase/sporadic/${currentApproval.id}/approve`, {
           method: 'POST',
@@ -196,7 +198,7 @@ function ApprovalList() {
           body: JSON.stringify({ comment })
         });
         result = { data: await response.json() };
-      } else if (currentApproval.approval_source === 'purchase_list') {
+      } else if (approvalType === 'purchase_list') {
         // 采购清单审批
         const response = await fetch(`${API_BASE}/purchase-lists/${currentApproval.id}/approve`, {
           method: 'POST',
@@ -204,7 +206,7 @@ function ApprovalList() {
           body: JSON.stringify({ comment })
         });
         result = { data: await response.json() };
-      } else if (currentApproval.type === 'virtual_convert') {
+      } else if (approvalType === 'virtual_convert') {
         // 虚拟转实体审批
         const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-conversion`, {
           method: 'POST',
@@ -212,7 +214,7 @@ function ApprovalList() {
           body: JSON.stringify({ approve: true, comment })
         });
         result = { data: await response.json() };
-      } else if (currentApproval.type === 'virtual_abort') {
+      } else if (approvalType === 'virtual_abort') {
         // 虚拟中止审批
         const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-abort`, {
           method: 'POST',
@@ -257,33 +259,35 @@ function ApprovalList() {
       let result;
       
       // 根据审批来源调用不同的API
-      if (currentApproval.approval_source === 'project') {
+      const approvalType = currentApproval.approval_source || currentApproval.approval_type || currentApproval.type;
+      
+      if (approvalType === 'project') {
         result = await approvalService.rejectProject(
           currentApproval.project_id,
           comment
         );
-      } else if (currentApproval.approval_source === 'sporadic') {
+      } else if (approvalType === 'sporadic') {
         const response = await fetch(`${API_BASE}/purchase/sporadic/${currentApproval.id}/reject`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify({ comment })
         });
         result = { data: await response.json() };
-      } else if (currentApproval.approval_source === 'purchase_list') {
+      } else if (approvalType === 'purchase_list') {
         const response = await fetch(`${API_BASE}/purchase-lists/${currentApproval.id}/reject`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify({ comment })
         });
         result = { data: await response.json() };
-      } else if (currentApproval.type === 'virtual_convert') {
+      } else if (approvalType === 'virtual_convert') {
         const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-conversion`, {
           method: 'POST',
           headers: getAuthHeaders(),
           body: JSON.stringify({ approve: false, comment })
         });
         result = { data: await response.json() };
-      } else if (currentApproval.type === 'virtual_abort') {
+      } else if (approvalType === 'virtual_abort') {
         const response = await fetch(`${API_BASE}/projects/${currentApproval.project_id}/process-abort`, {
           method: 'POST',
           headers: getAuthHeaders(),
