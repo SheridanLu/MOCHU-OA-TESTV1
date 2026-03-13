@@ -631,8 +631,21 @@ function ProjectList() {
           )}
 
           {/* 实体项目操作 */}
-          {record.type === 'entity' && canModify(record) && (
+          {record.type === 'entity' && (
             <>
+              {/* 提交审批按钮 - pending状态 */}
+              {record.status === 'pending' && (
+                <Tooltip title="提交审批">
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<AuditOutlined />}
+                    onClick={() => handleSubmitApproval(record)}
+                  >
+                    提交审批
+                  </Button>
+                </Tooltip>
+              )}
               <Tooltip title={canModify(record) ? '编辑' : '审批中的项目不可编辑'}>
                 <Button
                   type="link"
