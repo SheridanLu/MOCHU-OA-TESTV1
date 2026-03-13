@@ -457,6 +457,29 @@ function ProjectList() {
     }
   };
 
+  // 提交项目立项审批
+  const handleSubmitApproval = async (project) => {
+    try {
+      setSubmitting(true);
+      const response = await fetch(`${API_BASE}/approval/project/${project.id}/submit`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const result = await response.json();
+      if (result.success) {
+        message.success('项目已提交审批');
+        loadProjects();
+      } else {
+        message.error(result.message || '提交失败');
+      }
+    } catch (error) {
+      console.error('提交审批失败:', error);
+      message.error('提交审批失败');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   // 查看项目详情（弹窗）
   const handleShowDetail = async (project) => {
     try {
