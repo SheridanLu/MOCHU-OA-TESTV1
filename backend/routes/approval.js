@@ -104,19 +104,33 @@ router.get('/pending', (req, res) => {
     const { page = 1, pageSize = 10 } = req.query;
     
     // 获取所有审批列表
-    const projectResult = getPendingApprovals(approvalRoles, { page, pageSize });
-    const sporadicResult = getSporadicPendingApprovals(approvalRoles, { page, pageSize });
-    const purchaseListResult = getPurchaseListPendingApprovals(approvalRoles, { page, pageSize });
-    const contractResult = getContractPendingApprovals(approvalRoles, { page, pageSize });
-    const batchPurchaseResult = getBatchPurchasePendingApprovals(approvalRoles, { page, pageSize });
-    const materialPaymentResult = getMaterialPaymentPendingApprovals(approvalRoles, { page, pageSize });
-    const laborPaymentResult = getLaborPaymentPendingApprovals(approvalRoles, { page, pageSize });
-    const materialChangeResult = getMaterialChangePendingApprovals(approvalRoles, { page, pageSize });
-    const visaChangeResult = getVisaChangePendingApprovals(approvalRoles, { page, pageSize });
-    const ownerChangeResult = getOwnerChangePendingApprovals(approvalRoles, { page, pageSize });
-    const stockOutResult = getStockOutPendingApprovals(approvalRoles, { page, pageSize });
-    const laborSettlementResult = getLaborSettlementPendingApprovals(approvalRoles, { page, pageSize });
-    const overageResult = getOverageApplicationPendingApprovals(approvalRoles, { page, pageSize });
+    let projectResult = { list: [], total: 0 };
+    let sporadicResult = { list: [], total: 0 };
+    let purchaseListResult = { list: [], total: 0 };
+    let contractResult = { list: [], total: 0 };
+    let batchPurchaseResult = { list: [], total: 0 };
+    let materialPaymentResult = { list: [], total: 0 };
+    let laborPaymentResult = { list: [], total: 0 };
+    let materialChangeResult = { list: [], total: 0 };
+    let visaChangeResult = { list: [], total: 0 };
+    let ownerChangeResult = { list: [], total: 0 };
+    let stockOutResult = { list: [], total: 0 };
+    let laborSettlementResult = { list: [], total: 0 };
+    let overageResult = { list: [], total: 0 };
+    
+    try { projectResult = getPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('项目审批查询失败:', e.message); }
+    try { sporadicResult = getSporadicPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('零星采购审批查询失败:', e.message); }
+    try { purchaseListResult = getPurchaseListPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('采购清单审批查询失败:', e.message); }
+    try { contractResult = getContractPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('合同审批查询失败:', e.message); }
+    try { batchPurchaseResult = getBatchPurchasePendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('批量采购审批查询失败:', e.message); }
+    try { materialPaymentResult = getMaterialPaymentPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('材料付款审批查询失败:', e.message); }
+    try { laborPaymentResult = getLaborPaymentPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('劳务付款审批查询失败:', e.message); }
+    try { materialChangeResult = getMaterialChangePendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('材料变更审批查询失败:', e.message); }
+    try { visaChangeResult = getVisaChangePendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('签证变更审批查询失败:', e.message); }
+    try { ownerChangeResult = getOwnerChangePendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('业主变更审批查询失败:', e.message); }
+    try { stockOutResult = getStockOutPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('出库审批查询失败:', e.message); }
+    try { laborSettlementResult = getLaborSettlementPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('竣工结算审批查询失败:', e.message); }
+    try { overageResult = getOverageApplicationPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('超量申请审批查询失败:', e.message); }
     
     // 合并结果
     const allList = [

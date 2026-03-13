@@ -689,8 +689,8 @@ function getBatchPurchasePendingApprovals(roleCodes, options = {}) {
     FROM batch_purchases bp
     LEFT JOIN projects p ON bp.project_id = p.id
     LEFT JOIN users u ON bp.creator_id = u.id
-    INNER JOIN batch_purchase_approvals ba ON bp.id = ba.batch_id
-      AND ba.status = 'pending'
+    INNER JOIN batch_purchase_approvals ba ON bp.id = ba.batch_purchase_id
+      AND ba.action IS NULL
       AND ba.role IN (${rolePlaceholders})
     WHERE bp.status = 'pending_approval'
   `;
@@ -737,7 +737,7 @@ function getMaterialPaymentPendingApprovals(roleCodes, options = {}) {
     LEFT JOIN projects p ON mp.project_id = p.id
     LEFT JOIN users u ON mp.creator_id = u.id
     INNER JOIN material_payment_approvals ma ON mp.id = ma.payment_id
-      AND ma.status = 'pending'
+      AND ma.action IS NULL
       AND ma.role IN (${rolePlaceholders})
     WHERE mp.status = 'pending_approval'
   `;
@@ -784,7 +784,7 @@ function getLaborPaymentPendingApprovals(roleCodes, options = {}) {
     LEFT JOIN projects p ON lp.project_id = p.id
     LEFT JOIN users u ON lp.creator_id = u.id
     INNER JOIN labor_payment_approvals la ON lp.id = la.payment_id
-      AND la.status = 'pending'
+      AND la.action IS NULL
       AND la.role IN (${rolePlaceholders})
     WHERE lp.status = 'pending_approval'
   `;
@@ -829,8 +829,8 @@ function getMaterialChangePendingApprovals(roleCodes, options = {}) {
     FROM change_material cm
     LEFT JOIN projects p ON cm.project_id = p.id
     LEFT JOIN users u ON cm.creator_id = u.id
-    INNER JOIN material_change_approvals ca ON cm.id = ca.change_id
-      AND ca.status = 'pending'
+    INNER JOIN material_change_approvals ca ON cm.id = ca.material_change_id
+      AND ca.action IS NULL
       AND ca.role IN (${rolePlaceholders})
     WHERE cm.status = 'pending_approval'
   `;
@@ -876,7 +876,7 @@ function getVisaChangePendingApprovals(roleCodes, options = {}) {
     LEFT JOIN projects p ON cv.project_id = p.id
     LEFT JOIN users u ON cv.creator_id = u.id
     INNER JOIN change_visa_approvals va ON cv.id = va.visa_id
-      AND va.status = 'pending'
+      AND va.action IS NULL
       AND va.role IN (${rolePlaceholders})
     WHERE cv.status = 'pending_approval'
   `;
@@ -921,8 +921,8 @@ function getOwnerChangePendingApprovals(roleCodes, options = {}) {
     FROM change_owner co
     LEFT JOIN projects p ON co.project_id = p.id
     LEFT JOIN users u ON co.creator_id = u.id
-    INNER JOIN change_owner_approvals ca ON co.id = ca.change_id
-      AND ca.status = 'pending'
+    INNER JOIN change_owner_approvals oca ON co.id = ca.material_change_id
+      AND ca.action IS NULL
       AND ca.role IN (${rolePlaceholders})
     WHERE co.status = 'pending_approval'
   `;
@@ -1009,7 +1009,7 @@ function getLaborSettlementPendingApprovals(roleCodes, options = {}) {
     LEFT JOIN projects p ON ls.project_id = p.id
     LEFT JOIN users u ON ls.creator_id = u.id
     INNER JOIN completion_labor_settlement_approvals lsa ON ls.id = lsa.settlement_id
-      AND lsa.status = 'pending'
+      AND lsa.action IS NULL
       AND lsa.role IN (${rolePlaceholders})
     WHERE ls.status = 'pending_approval'
   `;
@@ -1054,8 +1054,8 @@ function getOverageApplicationPendingApprovals(roleCodes, options = {}) {
     FROM overage_applications oa
     LEFT JOIN projects p ON oa.project_id = p.id
     LEFT JOIN users u ON oa.creator_id = u.id
-    INNER JOIN overage_application_approvals oaa ON oa.id = oaa.application_id
-      AND oaa.status = 'pending'
+    INNER JOIN overage_application_approvals oaa ON oa.id = oaa.overage_application_id
+      AND oaa.action IS NULL
       AND oaa.role IN (${rolePlaceholders})
     WHERE oa.status = 'pending_approval'
   `;
