@@ -72,62 +72,88 @@ import LaborSettlement from './pages/completion/LaborSettlement';
 import DrawingUpload from './pages/completion/DrawingUpload';
 
 // 菜单配置
-const menuConfig = [
-  {
-    key: 'system',
-    name: '系统管理',
-    icon: '⚙️',
-    children: [
-      { key: 'organization', name: '组织架构', path: '/system/organization' },
-      { key: 'users', name: '用户管理', path: '/system/users' },
+// 获取过滤后的菜单配置（角色管理和权限分配只对系统管理员显示）
+const getFilteredMenuConfig = () => {
+  const userStr = localStorage.getItem('user');
+  let isAdmin = false;
+  
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      // 只有账号为 administrator 的用户才能看到角色管理和权限分配
+      isAdmin = user.account === 'administrator';
+    } catch (e) {
+      console.error('解析用户信息失败', e);
+    }
+  }
+
+  const systemChildren = [
+    { key: 'organization', name: '组织架构', path: '/system/organization' },
+    { key: 'users', name: '用户管理', path: '/system/users' },
+  ];
+  
+  // 只有系统管理员才能看到角色管理和权限分配
+  if (isAdmin) {
+    systemChildren.push(
       { key: 'roles', name: '角色管理', path: '/system/roles' },
-      { key: 'permissions', name: '权限分配', path: '/system/permissions' },
-      { key: 'announcements', name: '通知公告', path: '/system/announcements' },
-      { key: 'audit', name: '操作日志', path: '/system/audit' },
-    ]
-  },
-  {
-    key: 'project',
-    name: '项目管理',
-    icon: '📁',
-    children: [
-      { key: 'list', name: '项目列表', path: '/project/list' },
-      { key: 'progress', name: '项目进度', path: '/project/progress' },
-      { key: 'create', name: '项目立项', path: '/project/create' },
-      { key: 'virtual', name: '虚拟项目', path: '/project/virtual-create' },
-      { key: 'approval', name: '审批管理', path: '/project/approval' },
-    ]
-  },
-  {
-    key: 'contract',
-    name: '合同管理',
-    icon: '📄',
-    children: [
-      { key: 'list', name: '合同列表', path: '/contract/list' },
-      { key: 'income', name: '收入合同', path: '/contract/create' },
-      { key: 'expense', name: '支出合同', path: '/contract/expense-create' },
-      { key: 'overcheck', name: '超量审批', path: '/contract/overcheck-approval' },
-    ]
-  },
-  {
-    key: 'purchase',
-    name: '采购管理',
-    icon: '🛒',
-    children: [
-      { key: 'price', name: '材料基准价', path: '/purchase/price-library' },
-      { key: 'list', name: '采购清单', path: '/purchase/list' },
-      { key: 'batch', name: '批量采购', path: '/purchase/batch' },
-      { key: 'sporadic', name: '零星采购', path: '/purchase/sporadic' },
-      { key: 'overage', name: '超量申请', path: '/purchase/overage-apply' },
-    ]
-  },
-  {
-    key: 'material',
-    name: '物资管理',
-    icon: '📦',
-    children: [
-      { key: 'in', name: '物资入库', path: '/material/in' },
-      { key: 'out-apply', name: '物资领用', path: '/material/out-apply' },
+      { key: 'permissions', name: '权限分配', path: '/system/permissions' }
+    );
+  }
+  
+  systemChildren.push(
+    { key: 'announcements', name: '通知公告', path: '/system/announcements' },
+    { key: 'audit', name: '操作日志', path: '/system/audit' }
+  );
+
+  return [
+    {
+      key: 'system',
+      name: '系统管理',
+      icon: '⚙️',
+      children: systemChildren
+    },
+    {
+      key: 'project',
+      name: '项目管理',
+      icon: '📁',
+      children: [
+        { key: 'list', name: '项目列表', path: '/project/list' },
+        { key: 'progress', name: '项目进度', path: '/project/progress' },
+        { key: 'create', name: '项目立项', path: '/project/create' },
+        { key: 'virtual', name: '虚拟项目', path: '/project/virtual-create' },
+        { key: 'approval', name: '审批管理', path: '/project/approval' },
+      ]
+    },
+    {
+      key: 'contract',
+      name: '合同管理',
+      icon: '📄',
+      children: [
+        { key: 'list', name: '合同列表', path: '/contract/list' },
+        { key: 'income', name: '收入合同', path: '/contract/create' },
+        { key: 'expense', name: '支出合同', path: '/contract/expense-create' },
+        { key: 'overcheck', name: '超量审批', path: '/contract/overcheck-approval' },
+      ]
+    },
+    {
+      key: 'purchase',
+      name: '采购管理',
+      icon: '🛒',
+      children: [
+        { key: 'price', name: '材料基准价', path: '/purchase/price-library' },
+        { key: 'list', name: '采购清单', path: '/purchase/list' },
+        { key: 'batch', name: '批量采购', path: '/purchase/batch' },
+        { key: 'sporadic', name: '零星采购', path: '/purchase/sporadic' },
+        { key: 'overage', name: '超量申请', path: '/purchase/overage-apply' },
+      ]
+    },
+    {
+      key: 'material',
+      name: '物资管理',
+      icon: '📦',
+      children: [
+        { key: 'in', name: '物资入库', path: '/material/in' },
+        { key: 'out-apply', name: '物资领用', path: '/material/out-apply' },
       { key: 'out', name: '物资出库', path: '/material/out' },
       { key: 'return', name: '物资退库', path: '/material/return' },
       { key: 'query', name: '库存查询', path: '/material/query' },
@@ -181,7 +207,11 @@ const menuConfig = [
     icon: '📒',
     path: '/directory'
   },
-];
+  ];
+};
+
+// 菜单配置
+const menuConfig = getFilteredMenuConfig();
 
 // 受保护的路由组件
 function ProtectedRoute({ children }) {
