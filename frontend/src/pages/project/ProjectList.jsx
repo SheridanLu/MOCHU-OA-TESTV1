@@ -1083,6 +1083,60 @@ function ProjectList() {
                 </Space>
               </Form.Item>
             </Form>
+
+            {/* 审批流程说明 */}
+            <div style={{ marginTop: 16, padding: '12px', background: '#fafafa', borderRadius: 4 }}>
+              <h4 style={{ marginBottom: 12 }}>
+                <AuditOutlined style={{ marginRight: 8 }} />
+                审批流程
+              </h4>
+              <Steps
+                direction="vertical"
+                size="small"
+                items={[
+                  {
+                    title: '第一步：财务审批',
+                    description: (
+                      <div style={{ padding: '4px 0' }}>
+                        <Space direction="vertical" style={{ width: '100%' }} size="small">
+                          <div>
+                            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                            <span style={{ color: '#52c41a' }}>同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>流转至总经理审批</span>
+                          </div>
+                          <div>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                            <span style={{ color: '#ff4d4f' }}>不同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>需填写不同意原因</span>
+                          </div>
+                        </Space>
+                      </div>
+                    ),
+                    status: 'process'
+                  },
+                  {
+                    title: '第二步：总经理审批',
+                    description: (
+                      <div style={{ padding: '4px 0' }}>
+                        <Space direction="vertical" style={{ width: '100%' }} size="small">
+                          <div>
+                            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                            <span style={{ color: '#52c41a' }}>同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>生成实体项目，分配10位项目编号</span>
+                          </div>
+                          <div>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                            <span style={{ color: '#ff4d4f' }}>不同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>需填写不同意原因</span>
+                          </div>
+                        </Space>
+                      </div>
+                    ),
+                    status: 'wait'
+                  }
+                ]}
+              />
+            </div>
           </>
         )}
       </Modal>
@@ -1188,8 +1242,58 @@ function ProjectList() {
               </Form.Item>
             </Form>
 
-            <div style={{ color: '#faad14', fontSize: 12 }}>
-              提示：中止申请将进入审批流程（财务 → 总经理）
+            {/* 审批流程说明 */}
+            <div style={{ marginTop: 16, padding: '12px', background: '#fafafa', borderRadius: 4 }}>
+              <h4 style={{ marginBottom: 12 }}>
+                <AuditOutlined style={{ marginRight: 8 }} />
+                审批流程
+              </h4>
+              <Steps
+                direction="vertical"
+                size="small"
+                items={[
+                  {
+                    title: '第一步：财务审批',
+                    description: (
+                      <div style={{ padding: '4px 0' }}>
+                        <Space direction="vertical" style={{ width: '100%' }} size="small">
+                          <div>
+                            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                            <span style={{ color: '#52c41a' }}>同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>流转至总经理审批</span>
+                          </div>
+                          <div>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                            <span style={{ color: '#ff4d4f' }}>不同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>需填写不同意原因</span>
+                          </div>
+                        </Space>
+                      </div>
+                    ),
+                    status: 'process'
+                  },
+                  {
+                    title: '第二步：总经理审批',
+                    description: (
+                      <div style={{ padding: '4px 0' }}>
+                        <Space direction="vertical" style={{ width: '100%' }} size="small">
+                          <div>
+                            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+                            <span style={{ color: '#52c41a' }}>同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>项目状态变为已中止，成本归集到指定目标</span>
+                          </div>
+                          <div>
+                            <CloseCircleOutlined style={{ color: '#ff4d4f', marginRight: 8 }} />
+                            <span style={{ color: '#ff4d4f' }}>不同意</span>
+                            <span style={{ marginLeft: 16, color: '#999', fontSize: 12 }}>需填写不同意原因</span>
+                          </div>
+                        </Space>
+                      </div>
+                    ),
+                    status: 'wait'
+                  }
+                ]}
+              />
             </div>
           </>
         )}
