@@ -560,6 +560,61 @@ function canUserApprove(approvalId, userId, roleCode) {
   return true;
 }
 
+/**
+ * 获取采购清单待审批列表
+ */
+function getPurchaseListPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      pl.id,
+      pl.name,
+      pl.project_id,
+      pl.approval_status,
+      pl.approval_step,
+      pl.submitter_id,
+      pl.submitted_at,
+      pl.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'purchase_list' as approval_type,
+      pla.step_name as current_step_name,
+      pla.role as required_role
+    FROM purchase_lists pl
+    LEFT JOIN projects p ON pl.project_id = p.id
+    LEFT JOIN users u ON pl.submitter_id = u.id
+    INNER JOIN purchase_list_approvals pla ON pl.id = pla.purchase_list_id
+      AND pla.step = pl.approval_step
+      AND pla.role IN (${rolePlaceholders})
+      AND pla.status = 'pending'
+    WHERE pl.approval_status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY pl.submitted_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return {
+    list,
+    total,
+    page: parseInt(page),
+    pageSize: parseInt(pageSize)
+  };
+}
+
 module.exports = {
   initApprovalTables,
   createApproval,
@@ -571,6 +626,7 @@ module.exports = {
   rejectApproval,
   getPendingApprovals,
   getSporadicPendingApprovals,
+  getPurchaseListPendingApprovals,
   canUserApprove,
   ApprovalStatus,
   ApprovalNodeStatus,

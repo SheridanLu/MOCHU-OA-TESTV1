@@ -21,7 +21,8 @@ import {
   EyeOutlined,
   EditOutlined,
   DeleteOutlined,
-  FileTextOutlined
+  FileTextOutlined,
+  AuditOutlined
 } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -163,6 +164,27 @@ function PurchaseListList() {
     setModalVisible(true);
   };
   
+  // 提交审批
+  const handleSubmitApproval = async (record) => {
+    try {
+      const response = await fetch(`${API_BASE}/purchase-lists/${record.id}/submit`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+      const result = await response.json();
+      
+      if (result.success) {
+        message.success('审批申请已提交');
+        loadLists();
+      } else {
+        message.error(result.message || '提交失败');
+      }
+    } catch (error) {
+      console.error('提交审批失败:', error);
+      message.error('提交审批失败');
+    }
+  };
+
   // 删除清单
   const handleDelete = async (id) => {
     try {
@@ -284,9 +306,24 @@ function PurchaseListList() {
       render: (time) => new Date(time).toLocaleString('zh-CN')
     },
     {
+      title: '审批状态',
+      dataIndex: 'approval_status',
+      key: 'approval_status',
+      width: 100,
+      render: (status) => {
+        const statusMap = {
+          'pending_approval': { text: '审批中', color: 'orange' },
+          'approved': { text: '已通过', color: 'green' },
+          'rejected': { text: '已驳回', color: 'red' }
+        };
+        const info = statusMap[status] || { text: '草稿', color: 'default' };
+        return <Tag color={info.color}>{info.text}</Tag>;
+      }
+    },
+    {
       title: '操作',
       key: 'action',
-      width: 200,
+      width: 250,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
@@ -298,11 +335,23 @@ function PurchaseListList() {
           >
             详情
           </Button>
+          {/* 提交审批按钮 - 草稿状态可见 */}
+          {!record.approval_status && (
+            <Button
+              type="link"
+              size="small"
+              icon={<AuditOutlined />}
+              onClick={() => handleSubmitApproval(record)}
+            >
+              提交审批
+            </Button>
+          )}
           <Button
             type="link"
             size="small"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
+            disabled={record.approval_status === 'pending_approval' || record.approval_status === 'approved'}
           >
             编辑
           </Button>
@@ -311,12 +360,14 @@ function PurchaseListList() {
             onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
+            disabled={record.approval_status === 'pending_approval' || record.approval_status === 'approved'}
           >
             <Button
               type="link"
               size="small"
               danger
               icon={<DeleteOutlined />}
+              disabled={record.approval_status === 'pending_approval' || record.approval_status === 'approved'}
             >
               删除
             </Button>

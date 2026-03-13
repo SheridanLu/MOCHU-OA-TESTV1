@@ -3147,3 +3147,322 @@ router.get('/overage-apply/purchase-lists/:listId/items', (req, res) => {
 });
 
 module.exports = router;
+
+// ========================================
+// 采购清单审批 API
+// ========================================
+
+/**
+ * POST /api/purchase-lists/:id/submit
+ * 提交采购清单审批
+ */
+router.post('/:id/submit', checkPermission('purchase:create'), (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+  
+  try {
+    // 检查采购清单是否存在
+    const list = db.prepare('SELECT * FROM purchase_lists WHERE id = ?').get(id);
+    if (!list) {
+      return res.status(404).json({
+        success: false,
+        message: '采购清单不存在'
+      });
+    }
+    
+    // 检查状态
+    if (list.approval_status === 'pending_approval') {
+      return res.status(400).json({
+        success: false,
+        message: '该清单已提交审批，请等待审批结果'
+      });
+    }
+    
+    if (list.approval_status === 'approved') {
+      return res.status(400).json({
+        success: false,
+        message: '该清单已审批通过'
+      });
+    }
+    
+    // 创建审批流程（财务→总经理）
+    const transaction = db.transaction(() => {
+      // 更新采购清单状态
+      db.prepare(`
+        UPDATE purchase_lists SET
+          approval_status = 'pending_approval',
+          approval_step = 1,
+          submitter_id = ?,
+          submitted_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, id);
+      
+      // 创建审批节点
+      db.prepare(`
+        INSERT INTO purchase_list_approvals (purchase_list_id, step, step_name, role, status)
+        VALUES (?, 1, '财务审批', 'FINANCE', 'pending')
+      `).run(id);
+      
+      db.prepare(`
+        INSERT INTO purchase_list_approvals (purchase_list_id, step, step_name, role, status)
+        VALUES (?, 2, '总经理审批', 'GM', 'pending')
+      `).run(id);
+    });
+    
+    transaction();
+    
+    res.json({
+      success: true,
+      message: '采购清单已提交审批'
+    });
+  } catch (error) {
+    console.error('提交审批失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '提交审批失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * POST /api/purchase-lists/:id/approve
+ * 审批通过
+ */
+router.post('/:id/approve', checkPermission('purchase:approve'), (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  const userId = req.user.id;
+  
+  try {
+    const list = db.prepare('SELECT * FROM purchase_lists WHERE id = ?').get(id);
+    if (!list) {
+      return res.status(404).json({
+        success: false,
+        message: '采购清单不存在'
+      });
+    }
+    
+    if (list.approval_status !== 'pending_approval') {
+      return res.status(400).json({
+        success: false,
+        message: '该清单不在审批中'
+      });
+    }
+    
+    // 获取当前审批节点
+    const currentFlow = db.prepare(`
+      SELECT * FROM purchase_list_approvals 
+      WHERE purchase_list_id = ? AND step = ? AND status = 'pending'
+    `).get(id, list.approval_step);
+    
+    if (!currentFlow) {
+      return res.status(400).json({
+        success: false,
+        message: '没有待审批的节点'
+      });
+    }
+    
+    // 检查用户角色
+    const userRoles = db.prepare(`
+      SELECT r.code FROM user_roles ur
+      JOIN roles r ON ur.role_id = r.id
+      WHERE ur.user_id = ?
+    `).all(userId);
+    const roleCodes = userRoles.map(r => r.code);
+    
+    if (!roleCodes.includes(currentFlow.role) && !roleCodes.includes('GM')) {
+      return res.status(403).json({
+        success: false,
+        message: '您没有审批权限'
+      });
+    }
+    
+    const transaction = db.transaction(() => {
+      // 更新审批节点状态
+      db.prepare(`
+        UPDATE purchase_list_approvals SET
+          status = 'approved',
+          approver_id = ?,
+          comment = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, comment || null, currentFlow.id);
+      
+      // 检查是否是最后一步
+      if (list.approval_step >= 2) {
+        // 审批完成
+        db.prepare(`
+          UPDATE purchase_lists SET
+            approval_status = 'approved',
+            approval_step = 2,
+            status = 'approved',
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(id);
+      } else {
+        // 进入下一步
+        db.prepare(`
+          UPDATE purchase_lists SET
+            approval_step = approval_step + 1,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `).run(id);
+      }
+    });
+    
+    transaction();
+    
+    res.json({
+      success: true,
+      message: list.approval_step >= 2 ? '审批通过，采购清单已生效' : '审批通过，等待下一级审批'
+    });
+  } catch (error) {
+    console.error('审批失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '审批失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * POST /api/purchase-lists/:id/reject
+ * 审批驳回
+ */
+router.post('/:id/reject', checkPermission('purchase:approve'), (req, res) => {
+  const { id } = req.params;
+  const { comment } = req.body;
+  const userId = req.user.id;
+  
+  try {
+    const list = db.prepare('SELECT * FROM purchase_lists WHERE id = ?').get(id);
+    if (!list) {
+      return res.status(404).json({
+        success: false,
+        message: '采购清单不存在'
+      });
+    }
+    
+    if (list.approval_status !== 'pending_approval') {
+      return res.status(400).json({
+        success: false,
+        message: '该清单不在审批中'
+      });
+    }
+    
+    // 获取当前审批节点
+    const currentFlow = db.prepare(`
+      SELECT * FROM purchase_list_approvals 
+      WHERE purchase_list_id = ? AND step = ? AND status = 'pending'
+    `).get(id, list.approval_step);
+    
+    if (!currentFlow) {
+      return res.status(400).json({
+        success: false,
+        message: '没有待审批的节点'
+      });
+    }
+    
+    const transaction = db.transaction(() => {
+      // 更新审批节点状态
+      db.prepare(`
+        UPDATE purchase_list_approvals SET
+          status = 'rejected',
+          approver_id = ?,
+          comment = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(userId, comment || null, currentFlow.id);
+      
+      // 更新采购清单状态
+      db.prepare(`
+        UPDATE purchase_lists SET
+          approval_status = 'rejected',
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).run(id);
+    });
+    
+    transaction();
+    
+    res.json({
+      success: true,
+      message: '审批已驳回'
+    });
+  } catch (error) {
+    console.error('驳回失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '驳回失败: ' + error.message
+    });
+  }
+});
+
+/**
+ * GET /api/purchase-lists/pending-approvals
+ * 获取待审批的采购清单列表
+ */
+router.get('/pending-approvals', checkPermission('purchase:approve'), (req, res) => {
+  const userId = req.user.id;
+  
+  try {
+    // 获取用户角色
+    const userRoles = db.prepare(`
+      SELECT r.code FROM user_roles ur
+      JOIN roles r ON ur.role_id = r.id
+      WHERE ur.user_id = ?
+    `).all(userId);
+    const roleCodes = userRoles.map(r => r.code);
+    
+    // 只有财务和总经理可以查看
+    const approvalRoles = roleCodes.filter(r => ['FINANCE', 'GM'].includes(r));
+    if (approvalRoles.length === 0) {
+      return res.json({
+        success: true,
+        data: []
+      });
+    }
+    
+    // 查询待审批的采购清单
+    const rolePlaceholders = approvalRoles.map(() => '?').join(',');
+    const lists = db.prepare(`
+      SELECT 
+        pl.*,
+        p.project_no,
+        p.name as project_name,
+        u.real_name as submitter_name,
+        pla.step_name as current_step_name,
+        pla.role as required_role
+      FROM purchase_lists pl
+      LEFT JOIN projects p ON pl.project_id = p.id
+      LEFT JOIN users u ON pl.submitter_id = u.id
+      INNER JOIN purchase_list_approvals pla ON pl.id = pla.purchase_list_id
+        AND pla.step = pl.approval_step
+        AND pla.role IN (${rolePlaceholders})
+        AND pla.status = 'pending'
+      WHERE pl.approval_status = 'pending_approval'
+      ORDER BY pl.submitted_at DESC
+    `).all(...approvalRoles);
+    
+    // 获取每个清单的物资数量
+    const listsWithItems = lists.map(list => {
+      const itemCount = db.prepare('SELECT COUNT(*) as count FROM purchase_list_items WHERE purchase_list_id = ?').get(list.id);
+      return {
+        ...list,
+        item_count: itemCount.count
+      };
+    });
+    
+    res.json({
+      success: true,
+      data: listsWithItems
+    });
+  } catch (error) {
+    console.error('获取待审批列表失败:', error);
+    res.status(500).json({
+      success: false,
+      message: '获取待审批列表失败'
+    });
+  }
+});

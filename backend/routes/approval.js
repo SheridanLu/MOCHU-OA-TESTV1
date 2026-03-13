@@ -16,6 +16,7 @@ const {
   rejectApproval,
   getPendingApprovals,
   getSporadicPendingApprovals,
+  getPurchaseListPendingApprovals,
   canUserApprove,
   ApprovalStatus
 } = require('../models/approval');
@@ -98,17 +99,21 @@ router.get('/pending', (req, res) => {
     // 获取零星采购审批列表
     const sporadicResult = getSporadicPendingApprovals(approvalRoles, { page, pageSize });
     
+    // 获取采购清单审批列表
+    const purchaseListResult = getPurchaseListPendingApprovals(approvalRoles, { page, pageSize });
+    
     // 合并结果
     const allList = [
       ...projectResult.list.map(item => ({ ...item, approval_source: 'project', source_name: '项目立项' })),
-      ...sporadicResult.list.map(item => ({ ...item, approval_source: 'sporadic', source_name: '零星采购' }))
+      ...sporadicResult.list.map(item => ({ ...item, approval_source: 'sporadic', source_name: '零星采购' })),
+      ...purchaseListResult.list.map(item => ({ ...item, approval_source: 'purchase_list', source_name: '采购清单' }))
     ];
     
     // 按创建时间排序
     allList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     // 分页
-    const total = projectResult.total + sporadicResult.total;
+    const total = projectResult.total + sporadicResult.total + purchaseListResult.total;
     const startIndex = (parseInt(page) - 1) * parseInt(pageSize);
     const paginatedList = allList.slice(startIndex, startIndex + parseInt(pageSize));
 
@@ -121,7 +126,8 @@ router.get('/pending', (req, res) => {
         pageSize: parseInt(pageSize),
         stats: {
           project: projectResult.total,
-          sporadic: sporadicResult.total
+          sporadic: sporadicResult.total,
+          purchase_list: purchaseListResult.total
         }
       }
     });
