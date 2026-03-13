@@ -222,6 +222,86 @@ function ApprovalList() {
           body: JSON.stringify({ approve: true, comment })
         });
         result = { data: await response.json() };
+      } else if (approvalType === 'contract') {
+        // 合同审批
+        const response = await fetch(`${API_BASE}/contract/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'batch_purchase') {
+        // 批量采购审批
+        const response = await fetch(`${API_BASE}/batch-purchase/batch/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'material_payment') {
+        // 材料付款审批
+        const response = await fetch(`${API_BASE}/payment/material/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'labor_payment') {
+        // 劳务付款审批
+        const response = await fetch(`${API_BASE}/payment/labor/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'material_change') {
+        // 材料变更审批
+        const response = await fetch(`${API_BASE}/change/material/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'visa_change') {
+        // 签证变更审批
+        const response = await fetch(`${API_BASE}/change/visa/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'owner_change') {
+        // 业主变更审批
+        const response = await fetch(`${API_BASE}/change/owner/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'stock_out') {
+        // 出库审批
+        const response = await fetch(`${API_BASE}/stock/out/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'labor_settlement') {
+        // 竣工结算审批
+        const response = await fetch(`${API_BASE}/completion/labor-settlement/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
+      } else if (approvalType === 'overage_application') {
+        // 超量申请审批
+        const response = await fetch(`${API_BASE}/purchase/overage-apply/${currentApproval.id}/approve`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify({ comment })
+        });
+        result = { data: await response.json() };
       } else {
         // 默认使用项目审批API
         result = await approvalService.approveProject(

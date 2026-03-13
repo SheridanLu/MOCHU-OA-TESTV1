@@ -17,6 +17,16 @@ const {
   getPendingApprovals,
   getSporadicPendingApprovals,
   getPurchaseListPendingApprovals,
+  getContractPendingApprovals,
+  getBatchPurchasePendingApprovals,
+  getMaterialPaymentPendingApprovals,
+  getLaborPaymentPendingApprovals,
+  getMaterialChangePendingApprovals,
+  getVisaChangePendingApprovals,
+  getOwnerChangePendingApprovals,
+  getStockOutPendingApprovals,
+  getLaborSettlementPendingApprovals,
+  getOverageApplicationPendingApprovals,
   canUserApprove,
   ApprovalStatus
 } = require('../models/approval');
@@ -93,27 +103,47 @@ router.get('/pending', (req, res) => {
 
     const { page = 1, pageSize = 10 } = req.query;
     
-    // 获取项目审批列表
+    // 获取所有审批列表
     const projectResult = getPendingApprovals(approvalRoles, { page, pageSize });
-    
-    // 获取零星采购审批列表
     const sporadicResult = getSporadicPendingApprovals(approvalRoles, { page, pageSize });
-    
-    // 获取采购清单审批列表
     const purchaseListResult = getPurchaseListPendingApprovals(approvalRoles, { page, pageSize });
+    const contractResult = getContractPendingApprovals(approvalRoles, { page, pageSize });
+    const batchPurchaseResult = getBatchPurchasePendingApprovals(approvalRoles, { page, pageSize });
+    const materialPaymentResult = getMaterialPaymentPendingApprovals(approvalRoles, { page, pageSize });
+    const laborPaymentResult = getLaborPaymentPendingApprovals(approvalRoles, { page, pageSize });
+    const materialChangeResult = getMaterialChangePendingApprovals(approvalRoles, { page, pageSize });
+    const visaChangeResult = getVisaChangePendingApprovals(approvalRoles, { page, pageSize });
+    const ownerChangeResult = getOwnerChangePendingApprovals(approvalRoles, { page, pageSize });
+    const stockOutResult = getStockOutPendingApprovals(approvalRoles, { page, pageSize });
+    const laborSettlementResult = getLaborSettlementPendingApprovals(approvalRoles, { page, pageSize });
+    const overageResult = getOverageApplicationPendingApprovals(approvalRoles, { page, pageSize });
     
     // 合并结果
     const allList = [
       ...projectResult.list.map(item => ({ ...item, approval_source: 'project', source_name: '项目立项' })),
       ...sporadicResult.list.map(item => ({ ...item, approval_source: 'sporadic', source_name: '零星采购' })),
-      ...purchaseListResult.list.map(item => ({ ...item, approval_source: 'purchase_list', source_name: '采购清单' }))
+      ...purchaseListResult.list.map(item => ({ ...item, approval_source: 'purchase_list', source_name: '采购清单' })),
+      ...contractResult.list.map(item => ({ ...item, approval_source: 'contract', source_name: '合同管理' })),
+      ...batchPurchaseResult.list.map(item => ({ ...item, approval_source: 'batch_purchase', source_name: '批量采购' })),
+      ...materialPaymentResult.list.map(item => ({ ...item, approval_source: 'material_payment', source_name: '材料付款' })),
+      ...laborPaymentResult.list.map(item => ({ ...item, approval_source: 'labor_payment', source_name: '劳务付款' })),
+      ...materialChangeResult.list.map(item => ({ ...item, approval_source: 'material_change', source_name: '材料变更' })),
+      ...visaChangeResult.list.map(item => ({ ...item, approval_source: 'visa_change', source_name: '签证变更' })),
+      ...ownerChangeResult.list.map(item => ({ ...item, approval_source: 'owner_change', source_name: '业主变更' })),
+      ...stockOutResult.list.map(item => ({ ...item, approval_source: 'stock_out', source_name: '出库申请' })),
+      ...laborSettlementResult.list.map(item => ({ ...item, approval_source: 'labor_settlement', source_name: '竣工结算' })),
+      ...overageResult.list.map(item => ({ ...item, approval_source: 'overage_application', source_name: '超量申请' }))
     ];
     
     // 按创建时间排序
     allList.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     
     // 分页
-    const total = projectResult.total + sporadicResult.total + purchaseListResult.total;
+    const total = projectResult.total + sporadicResult.total + purchaseListResult.total +
+                  contractResult.total + batchPurchaseResult.total + materialPaymentResult.total +
+                  laborPaymentResult.total + materialChangeResult.total + visaChangeResult.total +
+                  ownerChangeResult.total + stockOutResult.total + laborSettlementResult.total +
+                  overageResult.total;
     const startIndex = (parseInt(page) - 1) * parseInt(pageSize);
     const paginatedList = allList.slice(startIndex, startIndex + parseInt(pageSize));
 
@@ -127,7 +157,17 @@ router.get('/pending', (req, res) => {
         stats: {
           project: projectResult.total,
           sporadic: sporadicResult.total,
-          purchase_list: purchaseListResult.total
+          purchase_list: purchaseListResult.total,
+          contract: contractResult.total,
+          batch_purchase: batchPurchaseResult.total,
+          material_payment: materialPaymentResult.total,
+          labor_payment: laborPaymentResult.total,
+          material_change: materialChangeResult.total,
+          visa_change: visaChangeResult.total,
+          owner_change: ownerChangeResult.total,
+          stock_out: stockOutResult.total,
+          labor_settlement: laborSettlementResult.total,
+          overage_application: overageResult.total
         }
       }
     });

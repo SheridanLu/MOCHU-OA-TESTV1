@@ -615,6 +615,465 @@ function getPurchaseListPendingApprovals(roleCodes, options = {}) {
   };
 }
 
+/**
+ * 获取合同待审批列表
+ */
+function getContractPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      c.id,
+      c.contract_no,
+      c.name as contract_name,
+      c.project_id,
+      c.amount,
+      c.status,
+      c.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'contract' as approval_source,
+      '合同管理' as source_name,
+      ah.role as required_role
+    FROM contracts c
+    LEFT JOIN projects p ON c.project_id = p.id
+    LEFT JOIN users u ON c.created_by = u.id
+    INNER JOIN contract_approval_history ah ON c.id = ah.contract_id
+      AND ah.status = 'pending'
+      AND ah.role IN (${rolePlaceholders})
+    WHERE c.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY c.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取批量采购待审批列表
+ */
+function getBatchPurchasePendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      bp.id,
+      bp.batch_no,
+      bp.project_id,
+      bp.status,
+      bp.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'batch_purchase' as approval_source,
+      '批量采购' as source_name,
+      ba.role as required_role
+    FROM batch_purchases bp
+    LEFT JOIN projects p ON bp.project_id = p.id
+    LEFT JOIN users u ON bp.created_by = u.id
+    INNER JOIN batch_purchase_approvals ba ON bp.id = ba.batch_id
+      AND ba.status = 'pending'
+      AND ba.role IN (${rolePlaceholders})
+    WHERE bp.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY bp.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取材料付款待审批列表
+ */
+function getMaterialPaymentPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      mp.id,
+      mp.payment_no,
+      mp.project_id,
+      mp.amount,
+      mp.status,
+      mp.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'material_payment' as approval_source,
+      '材料付款' as source_name,
+      ma.role as required_role
+    FROM material_payments mp
+    LEFT JOIN projects p ON mp.project_id = p.id
+    LEFT JOIN users u ON mp.created_by = u.id
+    INNER JOIN material_payment_approvals ma ON mp.id = ma.payment_id
+      AND ma.status = 'pending'
+      AND ma.role IN (${rolePlaceholders})
+    WHERE mp.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY mp.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取劳务付款待审批列表
+ */
+function getLaborPaymentPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      lp.id,
+      lp.payment_no,
+      lp.project_id,
+      lp.amount,
+      lp.status,
+      lp.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'labor_payment' as approval_source,
+      '劳务付款' as source_name,
+      la.role as required_role
+    FROM labor_payments lp
+    LEFT JOIN projects p ON lp.project_id = p.id
+    LEFT JOIN users u ON lp.created_by = u.id
+    INNER JOIN labor_payment_approvals la ON lp.id = la.payment_id
+      AND la.status = 'pending'
+      AND la.role IN (${rolePlaceholders})
+    WHERE lp.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY lp.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取材料变更待审批列表
+ */
+function getMaterialChangePendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      cm.id,
+      cm.change_no,
+      cm.project_id,
+      cm.status,
+      cm.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'material_change' as approval_source,
+      '材料变更' as source_name,
+      ca.role as required_role
+    FROM change_material cm
+    LEFT JOIN projects p ON cm.project_id = p.id
+    LEFT JOIN users u ON cm.created_by = u.id
+    INNER JOIN material_change_approvals ca ON cm.id = ca.change_id
+      AND ca.status = 'pending'
+      AND ca.role IN (${rolePlaceholders})
+    WHERE cm.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY cm.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取签证变更待审批列表
+ */
+function getVisaChangePendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      cv.id,
+      cv.visa_no as change_no,
+      cv.project_id,
+      cv.status,
+      cv.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'visa_change' as approval_source,
+      '签证变更' as source_name,
+      va.role as required_role
+    FROM change_visa cv
+    LEFT JOIN projects p ON cv.project_id = p.id
+    LEFT JOIN users u ON cv.created_by = u.id
+    INNER JOIN change_visa_approvals va ON cv.id = va.visa_id
+      AND va.status = 'pending'
+      AND va.role IN (${rolePlaceholders})
+    WHERE cv.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY cv.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取业主变更待审批列表
+ */
+function getOwnerChangePendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      co.id,
+      co.change_no,
+      co.project_id,
+      co.status,
+      co.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'owner_change' as approval_source,
+      '业主变更' as source_name,
+      ca.role as required_role
+    FROM change_owner co
+    LEFT JOIN projects p ON co.project_id = p.id
+    LEFT JOIN users u ON co.created_by = u.id
+    INNER JOIN change_owner_approvals ca ON co.id = ca.change_id
+      AND ca.status = 'pending'
+      AND ca.role IN (${rolePlaceholders})
+    WHERE co.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY co.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取出库待审批列表
+ */
+function getStockOutPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+
+  let sql = `
+    SELECT 
+      so.id,
+      so.application_no,
+      so.project_id,
+      so.status,
+      so.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'stock_out' as approval_source,
+      '出库申请' as source_name
+    FROM stock_out_applications so
+    LEFT JOIN projects p ON so.project_id = p.id
+    LEFT JOIN users u ON so.applicant_id = u.id
+    WHERE so.status = 'pending'
+  `;
+
+  const params = [];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY so.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取竣工结算待审批列表
+ */
+function getLaborSettlementPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      ls.id,
+      ls.settlement_no,
+      ls.project_id,
+      ls.status,
+      ls.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'labor_settlement' as approval_source,
+      '竣工结算' as source_name,
+      lsa.role as required_role
+    FROM completion_labor_settlements ls
+    LEFT JOIN projects p ON ls.project_id = p.id
+    LEFT JOIN users u ON ls.created_by = u.id
+    INNER JOIN completion_labor_settlement_approvals lsa ON ls.id = lsa.settlement_id
+      AND lsa.status = 'pending'
+      AND lsa.role IN (${rolePlaceholders})
+    WHERE ls.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY ls.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
+/**
+ * 获取超量申请待审批列表
+ */
+function getOverageApplicationPendingApprovals(roleCodes, options = {}) {
+  const { page = 1, pageSize = 10 } = options;
+  const offset = (parseInt(page) - 1) * parseInt(pageSize);
+
+  const roleArray = Array.isArray(roleCodes) ? roleCodes : [roleCodes];
+  const rolePlaceholders = roleArray.map(() => '?').join(',');
+
+  let sql = `
+    SELECT 
+      oa.id,
+      oa.application_no,
+      oa.project_id,
+      oa.status,
+      oa.created_at,
+      p.project_no,
+      p.name as project_name,
+      u.real_name as submitter_name,
+      'overage_application' as approval_source,
+      '超量申请' as source_name,
+      oaa.role as required_role
+    FROM overage_applications oa
+    LEFT JOIN projects p ON oa.project_id = p.id
+    LEFT JOIN users u ON oa.created_by = u.id
+    INNER JOIN overage_application_approvals oaa ON oa.id = oaa.application_id
+      AND oaa.status = 'pending'
+      AND oaa.role IN (${rolePlaceholders})
+    WHERE oa.status = 'pending_approval'
+  `;
+
+  const params = [...roleArray];
+
+  const countSql = `SELECT COUNT(*) as total FROM (${sql})`;
+  const countResult = db.prepare(countSql).get(...params);
+  const total = countResult.total;
+
+  sql += ' ORDER BY oa.created_at DESC LIMIT ? OFFSET ?';
+  params.push(parseInt(pageSize), offset);
+
+  const list = db.prepare(sql).all(...params);
+
+  return { list, total, page: parseInt(page), pageSize: parseInt(pageSize) };
+}
+
 module.exports = {
   initApprovalTables,
   createApproval,
@@ -627,6 +1086,16 @@ module.exports = {
   getPendingApprovals,
   getSporadicPendingApprovals,
   getPurchaseListPendingApprovals,
+  getContractPendingApprovals,
+  getBatchPurchasePendingApprovals,
+  getMaterialPaymentPendingApprovals,
+  getLaborPaymentPendingApprovals,
+  getMaterialChangePendingApprovals,
+  getVisaChangePendingApprovals,
+  getOwnerChangePendingApprovals,
+  getStockOutPendingApprovals,
+  getLaborSettlementPendingApprovals,
+  getOverageApplicationPendingApprovals,
   canUserApprove,
   ApprovalStatus,
   ApprovalNodeStatus,
