@@ -133,8 +133,19 @@ router.get('/pending', (req, res) => {
     try { overageResult = getOverageApplicationPendingApprovals(approvalRoles, { page, pageSize }); } catch (e) { console.error('超量申请审批查询失败:', e.message); }
     
     // 合并结果
+    // 处理项目审批列表，根据type字段区分不同审批类型
+    const processedProjectList = projectResult.list.map(item => {
+      if (item.type === 'virtual_convert') {
+        return { ...item, approval_source: 'virtual_convert', source_name: '虚拟转实体' };
+      } else if (item.type === 'virtual_abort') {
+        return { ...item, approval_source: 'virtual_abort', source_name: '虚拟中止' };
+      } else {
+        return { ...item, approval_source: 'project', source_name: '项目立项' };
+      }
+    });
+    
     const allList = [
-      ...projectResult.list.map(item => ({ ...item, approval_source: 'project', source_name: '项目立项' })),
+      ...processedProjectList,
       ...sporadicResult.list.map(item => ({ ...item, approval_source: 'sporadic', source_name: '零星采购' })),
       ...purchaseListResult.list.map(item => ({ ...item, approval_source: 'purchase_list', source_name: '采购清单' })),
       ...contractResult.list.map(item => ({ ...item, approval_source: 'contract', source_name: '合同管理' })),
