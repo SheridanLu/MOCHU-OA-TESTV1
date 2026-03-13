@@ -1385,10 +1385,66 @@ router.post('/:id/process-abort', authMiddleware, checkPermission('project:appro
           WHERE id = ?
         `).run(id);
         
-        // 如果有成本归集目标，记录归集关系
+        // 如果有成本归集目标，执行成本归集
         if (virtualProject.cost_target_type && virtualProject.cost_target_id) {
-          // 这里可以添加成本归集的具体业务逻辑
-          // 例如：将虚拟项目的成本记录迁移到目标项目/部门
+          const targetId = virtualProject.cost_target_id;
+          const targetType = virtualProject.cost_target_type;
+          
+          // 归集采购清单
+          db.prepare(`
+            UPDATE purchase_lists SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集零星采购
+          db.prepare(`
+            UPDATE sporadic_purchases SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集合同
+          db.prepare(`
+            UPDATE contracts SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集材料付款
+          db.prepare(`
+            UPDATE material_payments SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集劳务付款
+          db.prepare(`
+            UPDATE labor_payments SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集材料变更
+          db.prepare(`
+            UPDATE change_material SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集签证变更
+          db.prepare(`
+            UPDATE change_visa SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集业主变更
+          db.prepare(`
+            UPDATE change_owner SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          // 归集出库记录
+          db.prepare(`
+            UPDATE stock_out_applications SET project_id = ? 
+            WHERE project_id = ?
+          `).run(targetId, id);
+          
+          console.log(`虚拟项目 ${id} 成本已归集到目标 ${targetType}/${targetId}`);
         }
         
         return { approved: true, aborted: true };
