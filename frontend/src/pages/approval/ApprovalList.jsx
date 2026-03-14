@@ -324,6 +324,7 @@ function ApprovalList() {
         message.error(result.data?.message || '审批失败');
       }
     } catch (error) {
+      console.error('审批出错:', error);
       message.error(error.response?.data?.message || '审批失败');
     } finally {
       setSubmitting(false);
