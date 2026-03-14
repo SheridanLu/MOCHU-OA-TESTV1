@@ -192,12 +192,29 @@ function PriceLibrary() {
           handleCloseModal();
           fetchMaterials(pagination.current, pagination.pageSize);
         } else {
-          message.error(response.data.message || '新增失败');
+          // 检查是否是重复材料错误
+          if (response.data.message && response.data.message.includes('已存在')) {
+            Modal.error({
+              title: '无法添加重复材料',
+              content: '系统中已存在相同名称和规格的材料，请修改名称或规格后重试。'
+            });
+          } else {
+            message.error(response.data.message || '新增失败');
+          }
         }
       }
     } catch (error) {
       console.error('提交失败:', error);
-      message.error(error.response?.data?.message || '操作失败');
+      // 检查是否是重复材料错误
+      const errorMsg = error.response?.data?.message || '操作失败';
+      if (errorMsg.includes('已存在')) {
+        Modal.error({
+          title: '无法添加重复材料',
+          content: '系统中已存在相同名称和规格的材料，请修改名称或规格后重试。'
+        });
+      } else {
+        message.error(errorMsg);
+      }
     }
   };
 

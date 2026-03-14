@@ -109,7 +109,8 @@ router.get('/:id', (req, res) => {
  * 创建材料基准价
  */
 router.post('/', checkPermission('material:create'), (req, res) => {
-  console.log('收到材料创建请求:', req.body);
+  console.log('=== 收到材料创建请求 ===');
+  console.log('req.body:', JSON.stringify(req.body, null, 2));
   
   const {
     material_name,
@@ -123,6 +124,8 @@ router.post('/', checkPermission('material:create'), (req, res) => {
     category,
     tax_rate
   } = req.body;
+  
+  console.log('解析后的字段:', { material_name, specification, unit, base_price, category });
   
   // 验证必填字段
   if (!material_name || !material_name.trim()) {
@@ -142,7 +145,9 @@ router.post('/', checkPermission('material:create'), (req, res) => {
     });
   }
   
-  if (!base_price || base_price <= 0) {
+  console.log('base_price 类型:', typeof base_price, '值:', base_price);
+  
+  if (base_price === undefined || base_price === null || base_price === '' || Number(base_price) <= 0) {
     console.log('验证失败: 价格必须大于0', { base_price });
     return res.status(400).json({
       success: false,
@@ -150,21 +155,27 @@ router.post('/', checkPermission('material:create'), (req, res) => {
     });
   }
   
+  console.log('验证通过，开始创建材料');
+  
   const userId = req.user.id;
   
   try {
     // 检查是否已存在相同名称和规格的材料
+    console.log('检查重复材料:', { material_name: material_name.trim(), specification: specification || '' });
     const existing = db.prepare(`
       SELECT * FROM material_base_prices
       WHERE material_name = ? AND specification = ? AND status = 'active'
     `).get(material_name.trim(), specification || '');
     
     if (existing) {
+      console.log('材料已存在:', existing);
       return res.status(400).json({
         success: false,
         message: '已存在相同名称和规格的材料'
       });
     }
+    
+    console.log('开始插入数据库');
     
     const result = db.prepare(`
       INSERT INTO material_base_prices (
