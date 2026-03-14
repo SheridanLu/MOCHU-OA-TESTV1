@@ -102,13 +102,17 @@ function PriceLibrary() {
   const fetchMaterials = useCallback(async (page = 1, pageSize = 10) => {
     setLoading(true);
     try {
+      const token = localStorage.getItem('token');
       const params = {
         page,
         pageSize,
         ...searchParams
       };
       
-      const response = await axios.get('/api/materials/base', { params });
+      const response = await axios.get('/api/materials/base', { 
+        params,
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       if (response.data.success) {
         setMaterials(response.data.data || []);
@@ -556,7 +560,10 @@ function PriceLibrary() {
                 name="specification"
                 label="规格型号"
                 rules={[
-                  { required: form.getFieldValue('category') === 'material', message: '材料类必须填写规格型号' }
+                  ({ getFieldValue }) => ({
+                    required: getFieldValue('category') === 'material',
+                    message: '材料类必须填写规格型号'
+                  })
                 ]}
               >
                 <Input placeholder="请输入规格型号" />
