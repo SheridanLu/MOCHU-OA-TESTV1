@@ -620,6 +620,25 @@ function ApprovalList() {
   // 已审批记录表格列定义
   const approvedColumns = [
     {
+      title: '审批类型',
+      dataIndex: 'source_name',
+      key: 'source_name',
+      width: 120,
+      render: (text, record) => {
+        const source = record.approval_source || record.source_name;
+        if (source === 'purchase_list' || text === '采购清单') {
+          return <Tag color="purple">采购清单</Tag>;
+        } else if (source === 'project' || text === '项目立项') {
+          return <Tag color="blue">项目立项</Tag>;
+        } else if (source === 'virtual_convert' || text === '虚拟转实体') {
+          return <Tag color="green">虚拟转实体</Tag>;
+        } else if (source === 'virtual_abort' || text === '虚拟中止') {
+          return <Tag color="red">虚拟中止</Tag>;
+        }
+        return <Tag>{text || '项目审批'}</Tag>;
+      }
+    },
+    {
       title: '项目编号',
       dataIndex: 'project_no',
       key: 'project_no',
