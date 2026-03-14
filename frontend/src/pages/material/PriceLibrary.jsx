@@ -153,10 +153,12 @@ function PriceLibrary() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      const token = localStorage.getItem('token');
+      const headers = { Authorization: `Bearer ${token}` };
       
       if (editingMaterial) {
         // 更新
-        const response = await axios.put(`/api/materials/${editingMaterial.id}`, values);
+        const response = await axios.put(`/api/materials/${editingMaterial.id}`, values, { headers });
         if (response.data.success) {
           message.success('更新成功');
           handleCloseModal();
@@ -166,7 +168,7 @@ function PriceLibrary() {
         }
       } else {
         // 新增
-        const response = await axios.post('/api/materials', values);
+        const response = await axios.post('/api/materials', values, { headers });
         if (response.data.success) {
           message.success('新增成功');
           handleCloseModal();
@@ -177,14 +179,17 @@ function PriceLibrary() {
       }
     } catch (error) {
       console.error('提交失败:', error);
-      message.error('操作失败');
+      message.error(error.response?.data?.message || '操作失败');
     }
   };
 
   // 删除材料
   const handleDelete = async (id) => {
     try {
-      const response = await axios.delete(`/api/materials/${id}`);
+      const token = localStorage.getItem('token');
+      const response = await axios.delete(`/api/materials/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (response.data.success) {
         message.success('删除成功');
         fetchMaterials(pagination.current, pagination.pageSize);
@@ -193,7 +198,7 @@ function PriceLibrary() {
       }
     } catch (error) {
       console.error('删除失败:', error);
-      message.error('删除失败');
+      message.error(error.response?.data?.message || '删除失败');
     }
   };
 
