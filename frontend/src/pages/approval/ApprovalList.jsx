@@ -160,6 +160,27 @@ function ApprovalList() {
   };
 
   // 打开审批通过弹窗
+  // 格式化时间 - 处理北京时间
+  const formatDateTime = (text) => {
+    if (!text) return '-';
+    try {
+      let date;
+      if (typeof text === 'string' && text.includes('T')) {
+        // ISO格式 (2026-03-13T08:23:59.000Z)
+        date = new Date(text);
+      } else if (typeof text === 'string') {
+        // 本地格式 (2026-03-13 08:23:59)
+        // 假设是北京时间，直接显示
+        return text;
+      } else {
+        date = new Date(text);
+      }
+      return date.toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+    } catch (e) {
+      return text || '-';
+    }
+  };
+
   const handleOpenApprove = (record) => {
     setCurrentApproval(record);
     setComment('');
@@ -476,7 +497,7 @@ function ApprovalList() {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 170,
-      render: (text) => text ? new Date(text).toLocaleString('zh-CN') : '-'
+      render: (text) => text ? formatDateTime(text) : '-'
     },
     {
       title: '操作',
@@ -574,7 +595,7 @@ function ApprovalList() {
       dataIndex: 'created_at',
       key: 'created_at',
       width: 170,
-      render: (text) => text ? new Date(text).toLocaleString('zh-CN') : '-'
+      render: (text) => text ? formatDateTime(text) : '-'
     },
     {
       title: '操作',
@@ -633,7 +654,7 @@ function ApprovalList() {
       dataIndex: 'my_approved_at',
       key: 'my_approved_at',
       width: 170,
-      render: (text) => text ? new Date(text).toLocaleString('zh-CN') : '-'
+      render: (text) => text ? formatDateTime(text) : '-'
     },
     {
       title: '最终状态',
@@ -688,7 +709,7 @@ function ApprovalList() {
                 <>
                   <br />
                   <span style={{ fontSize: 12, color: '#999' }}>
-                    {new Date(flow.approved_at).toLocaleString('zh-CN')}
+                    {formatDateTime(flow.approved_at)}
                   </span>
                 </>
               )}
@@ -730,7 +751,7 @@ function ApprovalList() {
               )}
               {flow.approved_at && (
                 <div style={{ fontSize: 12, color: '#999' }}>
-                  {new Date(flow.approved_at).toLocaleString('zh-CN')}
+                  {formatDateTime(flow.approved_at)}
                 </div>
               )}
             </div>
@@ -909,7 +930,7 @@ function ApprovalList() {
               </Descriptions.Item>
               <Descriptions.Item label="提交时间">
                 {currentApproval.created_at ? 
-                  new Date(currentApproval.created_at).toLocaleString('zh-CN') : '-'}
+                  formatDateTime(currentApproval.created_at) : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="当前状态">
                 <Tag color={APPROVAL_STATUS_MAP[currentApproval.status]?.color}>
