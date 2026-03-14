@@ -729,7 +729,7 @@ function ExpenseContractCreate() {
                 name="contract_category"
                 label="合同分类"
                 initialValue="equipment"
-                tooltip="设备类：仅校验物料名称、单位、数量；材料类：校验型号规格、物料名称、单位、数量"
+                tooltip="设备类：仅校验物料名称、单位、数量；材料类：校验型号规格、物料名称、单位、数量；施工类：工程施工相关合同"
               >
                 <Select 
                   placeholder="请选择合同分类"
@@ -737,6 +737,7 @@ function ExpenseContractCreate() {
                 >
                   <Option value="equipment">设备类</Option>
                   <Option value="material">材料类</Option>
+                  <Option value="construction">施工类</Option>
                 </Select>
               </Form.Item>
             </Col>
