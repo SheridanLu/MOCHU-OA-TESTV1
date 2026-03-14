@@ -175,14 +175,19 @@ function ApprovalList() {
 
   // 确认审批通过
   const handleApprove = async () => {
-    if (!currentApproval) return;
+    if (!currentApproval) {
+      message.error('未选择审批记录');
+      return;
+    }
     
+    console.log('开始审批:', currentApproval);
     setSubmitting(true);
     try {
       let result;
       
       // 根据审批来源调用不同的API
       const approvalType = currentApproval.approval_source || currentApproval.approval_type || currentApproval.type;
+      console.log('审批类型:', approvalType);
       
       if (approvalType === 'project') {
         // 项目立项审批
