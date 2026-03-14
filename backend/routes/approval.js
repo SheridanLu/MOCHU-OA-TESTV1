@@ -573,34 +573,85 @@ router.get('/my-approved', (req, res) => {
     const { page = 1, pageSize = 10 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(pageSize);
 
-    // 查询总数
-    const countResult = db.prepare(`
+    // 查询总数 - 项目审批
+    const projectCount = db.prepare(`
       SELECT COUNT(DISTINCT a.id) as total 
       FROM approvals a
       JOIN approval_flows af ON a.id = af.approval_id
       WHERE af.approver_id = ? AND af.status != 'pending'
     `).get(userId);
+    
+    // 查询总数 - 采购清单审批
+    const purchaseListCount = db.prepare(`
+      SELECT COUNT(DISTINCT pla.purchase_list_id) as total 
+      FROM purchase_list_approvals pla
+      WHERE pla.approver_id = ? AND pla.status != 'pending'
+    `).get(userId);
 
-    // 查询列表
-    const list = db.prepare(`
+    // 查询列表 - 项目审批
+    const projectList = db.prepare(`
       SELECT DISTINCT
-        a.*,
+        a.id,
+        a.project_id,
+        a.type,
+        a.status,
+        a.created_at,
+        a.updated_at,
         p.project_no,
         p.name as project_name,
         p.customer,
         p.contract_amount,
         af.status as my_action,
         af.comment as my_comment,
-        af.approved_at as my_approved_at
+        af.approved_at as my_approved_at,
+        'project' as approval_source,
+        CASE a.type 
+          WHEN 'project' THEN '项目立项'
+          WHEN 'virtual_convert' THEN '虚拟转实体'
+          WHEN 'virtual_abort' THEN '虚拟中止'
+          ELSE '项目审批'
+        END as source_name
       FROM approvals a
       JOIN approval_flows af ON a.id = af.approval_id
       LEFT JOIN projects p ON a.project_id = p.id
       WHERE af.approver_id = ? AND af.status != 'pending'
-      ORDER BY af.approved_at DESC
-      LIMIT ? OFFSET ?
-    `).all(userId, parseInt(pageSize), offset);
+    `).all(userId);
+    
+    // 查询列表 - 采购清单审批
+    const purchaseListApprovals = db.prepare(`
+      SELECT DISTINCT
+        pl.id,
+        pl.id as purchase_list_id,
+        pl.name as project_name,
+        pl.approval_status as status,
+        pla.status as my_action,
+        pla.comment as my_comment,
+        pla.updated_at as my_approved_at,
+        pla.created_at,
+        pla.updated_at,
+        p.project_no,
+        p.name,
+        'purchase_list' as type,
+        'purchase_list' as approval_source,
+        '采购清单' as source_name
+      FROM purchase_list_approvals pla
+      JOIN purchase_lists pl ON pla.purchase_list_id = pl.id
+      LEFT JOIN projects p ON pl.project_id = p.id
+      WHERE pla.approver_id = ? AND pla.status != 'pending'
+    `).all(userId);
+    
+    // 合并列表
+    const allList = [...projectList, ...purchaseListApprovals];
+    
+    // 按审批时间排序
+    allList.sort((a, b) => new Date(b.my_approved_at || b.updated_at) - new Date(a.my_approved_at || a.updated_at));
+    
+    // 分页
+    const total = (projectCount.total || 0) + (purchaseListCount.total || 0);
+    const startIndex = (parseInt(page) - 1) * parseInt(pageSize);
+    const paginatedList = allList.slice(startIndex, startIndex + parseInt(pageSize));
 
-    const formattedList = list.map(item => ({
+    const formattedList = paginatedList.map(item => ({
       ...item,
       contract_amount: parseFloat(item.contract_amount) || 0
     }));
@@ -609,7 +660,7 @@ router.get('/my-approved', (req, res) => {
       success: true,
       data: {
         list: formattedList,
-        total: countResult.total,
+        total,
         page: parseInt(page),
         pageSize: parseInt(pageSize)
       }
