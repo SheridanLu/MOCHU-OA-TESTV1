@@ -337,16 +337,18 @@ function ApprovalList() {
       }
       
       if (result.data?.success) {
+        console.log('审批成功，刷新列表');
         message.success(result.data.message || '审批通过');
         setApproveVisible(false);
         loadPendingList();
         loadMyApproved();
       } else {
+        console.error('审批失败:', result.data);
         message.error(result.data?.message || '审批失败');
       }
     } catch (error) {
       console.error('审批出错:', error);
-      message.error(error.response?.data?.message || '审批失败');
+      message.error(error.message || '审批失败');
     } finally {
       setSubmitting(false);
     }
