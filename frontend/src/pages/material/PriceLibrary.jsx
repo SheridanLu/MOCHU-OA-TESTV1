@@ -157,12 +157,25 @@ function PriceLibrary() {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log('表单原始数据:', values);
+      
+      // 处理日期字段
+      const submitData = { ...values };
+      if (submitData.effective_date) {
+        submitData.effective_date = submitData.effective_date.format('YYYY-MM-DD');
+      }
+      if (submitData.expiry_date) {
+        submitData.expiry_date = submitData.expiry_date.format('YYYY-MM-DD');
+      }
+      
+      console.log('提交数据:', submitData);
       const token = localStorage.getItem('token');
       const headers = { Authorization: `Bearer ${token}` };
       
       if (editingMaterial) {
         // 更新
-        const response = await axios.put(`/api/materials/${editingMaterial.id}`, values, { headers });
+        const response = await axios.put(`/api/materials/${editingMaterial.id}`, submitData, { headers });
+        console.log('更新响应:', response.data);
         if (response.data.success) {
           message.success('更新成功');
           handleCloseModal();
@@ -172,7 +185,8 @@ function PriceLibrary() {
         }
       } else {
         // 新增
-        const response = await axios.post('/api/materials', values, { headers });
+        const response = await axios.post('/api/materials', submitData, { headers });
+        console.log('新增响应:', response.data);
         if (response.data.success) {
           message.success('新增成功');
           handleCloseModal();

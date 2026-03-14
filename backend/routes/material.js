@@ -109,6 +109,8 @@ router.get('/:id', (req, res) => {
  * 创建材料基准价
  */
 router.post('/', checkPermission('material:create'), (req, res) => {
+  console.log('收到材料创建请求:', req.body);
+  
   const {
     material_name,
     specification,
@@ -124,6 +126,7 @@ router.post('/', checkPermission('material:create'), (req, res) => {
   
   // 验证必填字段
   if (!material_name || !material_name.trim()) {
+    console.log('验证失败: 名称不能为空');
     return res.status(400).json({
       success: false,
       message: '名称不能为空'
@@ -132,6 +135,7 @@ router.post('/', checkPermission('material:create'), (req, res) => {
   
   // 材料类必须填写规格型号
   if (category === 'material' && !specification) {
+    console.log('验证失败: 材料类必须填写规格型号', { category, specification });
     return res.status(400).json({
       success: false,
       message: '材料类必须填写规格型号'
@@ -139,6 +143,7 @@ router.post('/', checkPermission('material:create'), (req, res) => {
   }
   
   if (!base_price || base_price <= 0) {
+    console.log('验证失败: 价格必须大于0', { base_price });
     return res.status(400).json({
       success: false,
       message: '价格必须大于0'
